@@ -48,3 +48,19 @@ po/*~
 # RStudio Connect folder
 rsconnect/
 .Rproj.user
+
+# data files
+/data/*
+!/data/synthetic/
+!/data/reference/
+
+# quarto
+/_book/
+/_freeze/
+/_site/
+/.quarto/
+/*_files/
+/*_cache/
+*_cache
+*.html
+*html*
