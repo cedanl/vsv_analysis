@@ -49,6 +49,7 @@ finalize_duo_data <- function(df) {
 
     df |>
         mutate(
+            # TODO: Check if this simplification is correct
             Teljaar = year,
             # if_else(
             #     month_num %in% 10:12,
@@ -57,7 +58,12 @@ finalize_duo_data <- function(df) {
             #     str_c(as.integer(str_sub(RAPPORTAGE_MAAND, 1, 4)) - 1, "-",
             #           str_sub(RAPPORTAGE_MAAND, 1, 4))
             # ),
-            Volgnummer = str_remove(Volgnummer, "C")
+            # TODO: It is generally considered bad practice to change variables
+            # without renaming them
+            Volgnummer = str_remove(Volgnummer, "C"),
+            Duo_RMC_regio = ifelse(is.character(Duo_RMC_regio),
+                                    parse_number(Duo_RMC_regio),
+                                    Duo_RMC_regio)
         ) |>
         select(any_of(standard_columns))
 }

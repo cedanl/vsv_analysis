@@ -252,7 +252,7 @@ Voeg na inlezen de datum toe. Voeg vervolgens de maanden toe obv een mapping. Ze
 
 ```{r}
 
-nrsp_file <- "NRSP2023DI24ZZ.csv" |>
+nrsp <- "NRSP2023DI24ZZ.csv" |>
     read_nrsp_file() |>
     add_nrsp_dates() |>
     # TODO Should this be included in NRSP as well? Or different form?
@@ -266,6 +266,6 @@ nrsp_file <- "NRSP2023DI24ZZ.csv" |>
 
 ```{r}
 
-complete <- bind_rows(a05_all, nrsp_file)
+complete <- bind_rows(a05_all, nrsp)
 
 ```

@@ -21,12 +21,10 @@ read_duo_file <- function(filename) {
 
     read_csv2(str_glue("data/synthetic/{file_code}/{filename}")) |>
         rename(
-            Crebocode = ILT.CREBO,
+            Crebocode = `ILT/CREBO`,
             KoppelNummer = BSN_ONDERWIJSNR,
             Leerweg = LEERWEG,
-            Volgnummer = INSCHR_VLGNR,
             Duo_Gemeentecode = GEMCODE,
-            Duo_RMC_regio = RMC_REGIO
         ) |>
         mutate(
             year = extracted_info$year,
@@ -44,8 +42,7 @@ read_nrsp_file <- function(filename) {
         rename(
             Crebocode = CREBO,
             Leerweg = ONDERWIJSSOORT,
-            Duo_Gemeentecode = GEMCODE,
-            Duo_RMC_regio = RMC_REGIO
+            Duo_Gemeentecode = GEMCODE
         ) |>
         mutate(year = info$year,
                type = info$type)
