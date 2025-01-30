@@ -35,6 +35,7 @@ packages_cran <- c(
     "usethis",
     "roxygen2",
     "this.path",
+    #"pak",
 
     # quarto
     "quarto",
@@ -109,7 +110,8 @@ options(renv.snapshot.filter = function(project) {
 # TODO Un-edit when adding packages above to include them in snapshot
 # renv::snapshot(type = "custom")
 
-renv::restore(clean = TRUE)
+# TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
+renv::restore()
 
 
 # Load packages
