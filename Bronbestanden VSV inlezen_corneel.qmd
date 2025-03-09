@@ -1,0 +1,275 @@
+---
+title: "Inlezen VSV"
+format: html
+---
+
+```{r}
+#| label: setup
+#| cache: false
+#| output: false
+#| include: false
+#| freeze: false
+
+# Load required libraries
+source("00_setup.R")
+
+```
+
+
+# Inlezen CSV-bestanden
+
+## VSV-normen
+Hier staan de VSV-normen:
+
+```{r}
+# VSVnormen <- read_csv2(here::here("data", "reference", "VSV_normen.csv"),
+#                        na = "NULL") |>
+#   mutate(NormDUOVSV = NormDUOVSV/1000) |>
+#   suppressMessages()
+```
+
+## VSV-Starterset
+### NRSP bestand inlezen met bestandsnaam als kolom BESTANDSNAAM
+Dit is een oefenbestand betreffende NRSP aanlevering:
+```{r}
+# Functie om een CSV-bestand in te lezen en de bestandsnaam toe te voegen als kolom
+read_csv_with_filename <- function(file_path) {
+  # Lees de CSV in
+  NRSP <- read.csv2("data/NRSP2023DI24ZZ.csv")
+  
+  # Voeg de bestandsnaam toe als kolom
+  NRSP <- NRSP %>%
+    mutate(BESTANDSNAAM = basename(file_path))
+  
+  return(NRSP)
+}
+
+file_path <- "data/NRSP2023DI24ZZ.csv"
+NRSP_met_bestandsnaam <- read_csv_with_filename(file_path)  %>%
+  rename(BURGERSERVICENUMMER = X.BURGERSERVICENUMMER
+  )
+
+# Bekijk de eerste paar rijen van de dataframe
+#view(NRSP_met_bestandsnaam)
+```
+
+## A05 bestand
+Dit is een oefenbestand betreffende A05 aanlevering:
+
+```{r}
+A05 <- read.csv2("data/202409A05I24ZZ.csv")
+```
+
+## Totaal A05 bestand maken
+Dit wordt de basis voor het A05 bestand:
+```{r}
+A05_dpo1 <- A05 %>%
+  mutate(
+    DatumRapportage = ymd(paste0(RAPPORTAGE_MAAND, "01")),
+    Peildatum1Okt = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                               paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-10-01"),
+                               paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-10-01"))),
+    Peildatum30sep = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                                paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-09-30"),
+                                paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-09-30"))),
+    Crebocode = ILT.CREBO,
+    KoppelNummer = BSN_ONDERWIJSNR,
+    RapportageMaand = case_when(
+      substr(RAPPORTAGE_MAAND, 5, 6) == "10" ~ "1-Oktober",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "11" ~ "2-November",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "12" ~ "3-December",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "01" ~ "4-Januari",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "02" ~ "5-Februari",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "03" ~ "6-Maart",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "04" ~ "7-April",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "05" ~ "8-Mei",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "06" ~ "9-Juni",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "07" ~ "10-Juli",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "08" ~ "11-Augustus",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "09" ~ "12-September"
+    ),
+    Teljaar = ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                     paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-", as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) + 1),
+                     paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-", substr(RAPPORTAGE_MAAND, 1, 4))),
+    Leerweg = LEERWEG,
+    Volgnummer = gsub("C", "", INSCHR_VLGNR),
+    Bestand = "A05",
+    Duo_Gemeentecode = as.character(GEMCODE),
+    Duo_RMC_regio = RMC_REGIO
+  ) %>%
+  select(DatumRapportage, Peildatum1Okt, Peildatum30sep, Crebocode, KoppelNummer, RapportageMaand, Teljaar, Leerweg, Volgnummer, Bestand, Duo_Gemeentecode, Duo_RMC_regio)
+```
+
+RapportageMaand = 9 uit het A05 bestand wordt RapportageMaand 13-oktober
+```{r}
+A05_dpo_13okt <- A05 %>%
+  filter(substr(RAPPORTAGE_MAAND, 5, 6) == "09") %>%
+  mutate(
+    DatumRapportage = ymd(paste0(RAPPORTAGE_MAAND, "01")),
+    Peildatum1Okt = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                               paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-10-01"),
+                               paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-10-01"))),
+    Peildatum30sep = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                                paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-09-30"),
+                                paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-09-30"))),
+    Crebocode = ILT.CREBO,
+    KoppelNummer = BSN_ONDERWIJSNR,
+    RapportageMaand = "13-Oktober",
+    Teljaar = as.character( 
+                ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                     paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-", as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) + 1),
+                     paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-", substr(RAPPORTAGE_MAAND, 1, 4)))
+                ),
+    Leerweg = LEERWEG,
+    Volgnummer = gsub("C", "", INSCHR_VLGNR),
+    Bestand = "A05",
+    Duo_Gemeentecode = as.character(GEMCODE),
+    Duo_RMC_regio = as.character(RMC_REGIO),
+  ) %>%
+  select(DatumRapportage, Peildatum1Okt, Peildatum30sep, Crebocode, KoppelNummer, RapportageMaand, Teljaar, Leerweg, Volgnummer, Bestand, Duo_Gemeentecode, Duo_RMC_regio)
+```
+
+RapportageMaand = 9 uit het A05 bestand wordt RapportageMaand 14-november
+```{r}
+A05_dpo_14nov <- A05 %>%
+  filter(substr(RAPPORTAGE_MAAND, 5, 6) == "09") %>%
+  mutate(
+    DatumRapportage = ymd(paste0(RAPPORTAGE_MAAND, "01")),
+    Peildatum1Okt = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                               paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-10-01"),
+                               paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-10-01"))),
+    Peildatum30sep = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                                paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-09-30"),
+                                paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-09-30"))),
+    Crebocode = ILT.CREBO,
+    KoppelNummer = BSN_ONDERWIJSNR,
+    RapportageMaand = "14-November",
+    Teljaar = as.character( 
+                ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                     paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-", as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) + 1),
+                     paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-", substr(RAPPORTAGE_MAAND, 1, 4)))
+                ),
+    Leerweg = LEERWEG,
+    Volgnummer = gsub("C", "", INSCHR_VLGNR),
+    Bestand = "A05",
+    Duo_Gemeentecode = as.character(GEMCODE),
+    Duo_RMC_regio = as.character(RMC_REGIO),
+  ) %>%
+  select(DatumRapportage, Peildatum1Okt, Peildatum30sep, Crebocode, KoppelNummer, RapportageMaand, Teljaar, Leerweg, Volgnummer, Bestand, Duo_Gemeentecode, Duo_RMC_regio)
+```
+
+
+RapportageMaand = 9 uit het A05 bestand wordt RapportageMaand 15-december
+```{r}
+A05_dpo_15dec <- A05 %>%
+  filter(substr(RAPPORTAGE_MAAND, 5, 6) == "09") %>%
+  mutate(
+    DatumRapportage = ymd(paste0(RAPPORTAGE_MAAND, "01")),
+    Peildatum1Okt = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                               paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-10-01"),
+                               paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-10-01"))),
+    Peildatum30sep = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                                paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-09-30"),
+                                paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-09-30"))),
+    Crebocode = ILT.CREBO,
+    KoppelNummer = BSN_ONDERWIJSNR,
+    RapportageMaand = "15-December",
+    Teljaar = as.character( 
+                ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                     paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-", as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) + 1),
+                     paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-", substr(RAPPORTAGE_MAAND, 1, 4)))
+                ),
+    Leerweg = LEERWEG,
+    Volgnummer = gsub("C", "", INSCHR_VLGNR),
+    Bestand = "A05",
+    Duo_Gemeentecode = as.character(GEMCODE),
+    Duo_RMC_regio = as.character(RMC_REGIO),
+  ) %>%
+  select(DatumRapportage, Peildatum1Okt, Peildatum30sep, Crebocode, KoppelNummer, RapportageMaand, Teljaar, Leerweg, Volgnummer, Bestand, Duo_Gemeentecode, Duo_RMC_regio)
+```
+# NRSP bestand goed inlezen
+```{r}
+NRSP <- NRSP_met_bestandsnaam %>%
+  mutate(
+    DatumRapportage = case_when(
+      grepl("VI", BESTANDSNAAM) ~ ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) + 1, "-03-01")),
+      grepl("DI", BESTANDSNAAM) ~ ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) + 1, "-11-01"))
+    ),
+    Peildatum1Okt = ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-10-01")),
+    Peildatum30sep = ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-09-30")),
+    Crebocode = CREBO,
+    KoppelNummer = ifelse(BURGERSERVICENUMMER == 0, ONDERWIJSNUMMER, BURGERSERVICENUMMER),
+    RapportageMaand = case_when(
+      grepl("VI", BESTANDSNAAM) ~ "16-NenR-V",
+      grepl("DI", BESTANDSNAAM) ~ "17-NenR-D"
+    ),
+    Teljaar = paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-", substr(BESTANDSNAAM, 5, 8)),
+    Leerweg = ONDERWIJSSOORT,
+    Volgnummer = NA,
+    Bestand = case_when(
+      grepl("VI", BESTANDSNAAM) ~ "NRSP-V",
+      grepl("DI", BESTANDSNAAM) ~ "NRSP-D"
+    ),
+    Duo_Gemeentecode = as.character(GEMCODE),
+    Duo_RMC_regio = as.character(RMC_REGIO)
+  ) %>%
+  select(DatumRapportage, Peildatum1Okt, Peildatum30sep, Crebocode, KoppelNummer, RapportageMaand, Teljaar, Leerweg, Volgnummer, Bestand, Duo_Gemeentecode, Duo_RMC_regio)
+
+```
+
+# Totaal bestand A05 maken
+Hier worden de databestand aan elkaar gekoppeld (UNION ALL in tsql):
+```{r}
+A05_dpo_totaal <- bind_rows(A05_dpo1, A05_dpo_13okt, A05_dpo_14nov, A05_dpo_15dec, NRSP)
+```
+
+
+## Lees alle ... bestanden in
+(Cdh: Wat is een betekenisvolle naam voor A05 bestanden?)
+
+Lees alle ... bestanden in. DUO noemt dit A05 bestanden. 
+Voeg na inlezen de basisdatum van het bestand en de peildatums (30-9 en 1-10) van de inschrijving toe. Voeg vervolgens de maanden toe obv een mapping. Zet tenslotte de data van alle maanden onder elkaar.
+
+```{r}
+
+# Read mapping
+month_labels <- read_csv("data/reference/month_labels.csv")
+
+# Read A05
+a05_files <- list.files("data/synthetic/A05", pattern = "*.csv", full.names = FALSE)
+
+a05_all <- a05_files |>
+    map(read_duo_file) |>
+    map(add_base_dates) |>
+    map(add_peildatums) |> 
+    map(add_labels) |>
+    map(~finalize_duo_data(.x)) |>
+    bind_rows()
+
+```
+
+## Lees de .. bestanden in
+(CdH: Ik weet niet zeker of dit klopt maar ter indicatie. Ik heb hier nog geen map gedaan waarbij alle data tegelijk wordt ingelezen).
+
+DUO noemt dit NRSP bestanden. Dit zijn bestanden die een half jaar en jaar na het inschrijvingsjaar verschijnen waarop ze betrekking hebben. 
+Voeg na inlezen de datum toe. Voeg vervolgens de maanden toe obv een mapping. Zet tenslotte de data van alle maanden onder elkaar.
+
+```{r}
+
+nrsp <- "NRSP2023DI24ZZ.csv" |>
+    read_nrsp_file() |>
+    add_nrsp_dates() |>
+    # TODO Should this be included in NRSP as well? Or different form?
+    # add_peildatums() |> 
+    prepare_nrsp_data() |>
+    finalize_duo_data()
+
+```
+
+## Voeg samen
+
+```{r}
+
+complete <- bind_rows(a05_all, nrsp)
+
+```

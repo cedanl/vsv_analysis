@@ -1,0 +1,222 @@
+---
+title: "Inlezen VSV"
+format: html
+---
+
+```{r}
+#| label: setup
+#| cache: false
+#| output: false
+#| include: false
+#| freeze: false
+
+# Load required libraries
+source("00_setup.R")
+
+```
+
+
+# Inlezen CSV-bestanden
+
+## Medata (vsv normen)
+Hier staan de VSV-normen:
+
+```{r}
+VSVnormen <- read_csv2(here::here("data", "reference", "VSV_normen.csv"),
+                       na = "NULL") |>
+  mutate(NormDUOVSV = NormDUOVSV/1000) |>
+  suppressMessages()
+```
+
+## Data bestanden
+
+De bestanden zijn per jaar opgeslagen. 
+
+```{r}
+
+file_path_2022 <- file.path(config::get("data_base_dir"), "2022")
+file_path_2023 <- file.path(config::get("data_base_dir"), "2023")
+file_path_2024 <- file.path(config::get("data_base_dir"), "2024")
+file_path_2025 <- file.path(config::get("data_base_dir"), "2025")
+
+bestanden <- c(list.files( path=file_path_2022, full.names=TRUE ),
+               list.files( path=file_path_2023, full.names=TRUE ),
+               list.files( path=file_path_2024, full.names=TRUE ),
+               list.files( path=file_path_2025, full.names=TRUE ))
+
+```
+
+
+## NRSP bestand 
+### inlezen met bestandsnaam als kolom BESTANDSNAAM
+```{r}
+## TODO old code, bestanden wordt ook gebruikt voor A05 dus kan beter eerder worden geladen
+# bestanden <- c(list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2022", full.names=TRUE ),
+#   list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2023", full.names=TRUE ),
+#   list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2024", full.names=TRUE ),
+#   list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2025", full.names=TRUE ))
+# 
+
+NRSP_totaal <-fs::fs_path(bestanden[grep("NRSP", bestanden)]) %>% 
+  set_names(x = ., nm = .) |>
+  map_dfr(read_csv2, .id = "BESTANDSNAAM" ) |>
+  mutate(BESTANDSNAAM = str_sub(BESTANDSNAAM, start = -18, end = -1)) |>
+    rename (BURGERSERVICENUMMER = `#BURGERSERVICENUMMER`) |>
+  # Gelijk maken aan DPO tabellen  
+  mutate(
+    DatumRapportage = case_when(
+      grepl("VI", BESTANDSNAAM) ~ ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) + 1, "-03-01")),
+      grepl("DI", BESTANDSNAAM) ~ ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) + 1, "-11-01"))
+    ),
+    Peildatum1Okt = ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-10-01")),
+    Peildatum30sep = ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-09-30")),
+    KoppelNummer = ifelse(BURGERSERVICENUMMER == 0, ONDERWIJSNUMMER, BURGERSERVICENUMMER),
+    RapportageMaand = case_when(
+      grepl("VI", BESTANDSNAAM) ~ "16-NenR-V",
+      grepl("DI", BESTANDSNAAM) ~ "17-NenR-D"
+    ),
+    Teljaar = paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-", substr(BESTANDSNAAM, 5, 8)),
+    Volgnummer = NA,
+    Bestand = case_when(
+      grepl("VI", BESTANDSNAAM) ~ "NRSP-V",
+      grepl("DI", BESTANDSNAAM) ~ "NRSP-D"
+    ),
+    Duo_Gemeentecode = as.character(GEMCODE),
+    Duo_RMC_regio = as.character(RMC_REGIO),
+    RAPPORTAGE_MAAND = NA,
+    #Deze kolommen bevat het DPO bestand niet:
+    #Geboortedatum = as.Date(as.character(GEBOORTEDATUM), format = "%Y%m%d"),
+    Geboortedatum = dmy(GEBOORTEDATUM),
+    Postcode = as.character(POSTCODE_CIJFERS),
+    Woongemeente = NA, 
+    Woonplaats = NA,
+    Niveau_num = as.integer(ifelse(regmatches(NIVEAU, gregexpr("[0-9]+", NIVEAU)) == 0, NA, regmatches(NIVEAU, gregexpr("[0-9]+", NIVEAU)))),
+    Indicatie_startkwalificatie = NA
+  ) |>
+  select(RAPPORTAGE_MAAND, DatumRapportage, Peildatum1Okt, Peildatum30sep, Crebocode = CREBO, KoppelNummer, RapportageMaand, Teljaar, Leerweg = ONDERWIJSSOORT, 
+         Volgnummer, 
+         Bestand, Duo_Gemeentecode, Duo_RMC_regio,
+         #Deze kolommen bevat het DPO bestand niet:
+         CreboOmschrijving = CREBO_OMSCHRIJVING, GemeenteNaam = GEMEENTENAAM, Geslacht = GESLACHT, Geboortedatum, Woongemeente, Woonplaats,
+         PostcodeCijfers = POSTCODE_CIJFERS, Postcode,
+         Niveau = NIVEAU, OnderwijsSoort = ONDERWIJSSOORT, Indicatie_startkwalificatie, Duo_RMC_regioNaam = RMC_REGIO_NAAM, BRIN,
+         OnderwijsAanbieder_Code = ONDERWIJSAANBIEDER_CODE,OnderwijsAanbieder_Naam = ONDERWIJSAANBIEDER_NAAM, 
+         OnderwijsLocatie_Code = ONDERWIJSLOCATIE_CODE, OnderwijsLocatie_Postcode = ONDERWIJSLOCATIE_POSTCODE,
+         Niveau_num
+         )  |>
+  suppressMessages()
+
+```
+
+
+## Totaal A05 bestand maken
+
+### Basis bestand 
+Dit wordt de basis voor het A05 bestand:
+```{r}
+A05_totaal <- bestanden[grep("A05", bestanden)] |> 
+  map_dfr( read_csv2 ) |> 
+  rename (BRIN = `#BRIN`,
+          Leerweg = LEERWEG,
+          Crebocode = `ILT/CREBO`,
+          KoppelNummer = BSN_ONDERWIJSNR,
+          Duo_RMC_regio = RMC_REGIO) |>
+  mutate(
+    DatumRapportage = ymd(paste0(RAPPORTAGE_MAAND, "01")),
+    Peildatum1Okt = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                               paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-10-01"),
+                               paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-10-01"))),
+    Peildatum30sep = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                                paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-09-30"),
+                                paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-09-30"))),
+    RapportageMaand = case_when(
+      substr(RAPPORTAGE_MAAND, 5, 6) == "10" ~ "1-Oktober",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "11" ~ "2-November",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "12" ~ "3-December",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "01" ~ "4-Januari",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "02" ~ "5-Februari",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "03" ~ "6-Maart",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "04" ~ "7-April",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "05" ~ "8-Mei",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "06" ~ "9-Juni",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "07" ~ "10-Juli",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "08" ~ "11-Augustus",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "09" ~ "12-September"
+    ),
+    Teljaar = ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                     paste0(substr(RAPPORTAGE_MAAND, 1, 4),
+                            "-",
+                            as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) + 1),
+                     paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1,
+                            "-",
+                            substr(RAPPORTAGE_MAAND, 1, 4))),
+    Volgnummer = gsub("C", "", INSCHR_VLGNR),
+    Bestand = "A05",
+    Duo_Gemeentecode = as.character(GEMCODE),
+    
+     #Deze kolommen bevat het DPO bestand niet:
+    GemeenteNaam = "",
+    Geslacht = "",
+    #Geboortedatum = as.Date(GEBOORTEDATUM, format = "%d-%m-%Y"),
+    Geboortedatum = dmy(GEBOORTEDATUM),
+    PostcodeCijfers = as.integer(substr(POSTCODE, 1, 4)),
+    OnderwijsSoort = "",
+    Duo_RMC_regioNaam = "",
+    Niveau_num = as.integer(ifelse(regmatches(NIVEAU, gregexpr("[0-9]+", NIVEAU)) == 0, NA, regmatches(NIVEAU, gregexpr("[0-9]+", NIVEAU)))),
+    Indicatie_startkwalificatie = INDICATIE_STARTKWALIFICATIE
+    ) |>
+  
+  select(RAPPORTAGE_MAAND, DatumRapportage, Peildatum1Okt, Peildatum30sep, Crebocode, KoppelNummer,
+         RapportageMaand, Teljaar, Leerweg, Volgnummer, Bestand, Duo_Gemeentecode, Duo_RMC_regio,
+          #Deze kolommen bevat het DPO bestand niet:
+         CreboOmschrijving = `ILT/CREBO_OMS`, GemeenteNaam, Geslacht, Geboortedatum, Woongemeente = WOONGEMEENTE, Woonplaats = WOONPLAATS,
+         PostcodeCijfers, Postcode = POSTCODE,
+         Niveau = NIVEAU, OnderwijsSoort, Indicatie_startkwalificatie, Duo_RMC_regioNaam, BRIN,
+         OnderwijsAanbieder_Code = ONDERWIJSAANBIEDERCODE,OnderwijsAanbieder_Naam = ONDERWIJSAANBIEDER_NAAM, 
+         OnderwijsLocatie_Code = ONDERWIJSLOCATIECODE, OnderwijsLocatie_Postcode = ONDERWIJSLOCATIE_POSTCODE,
+        Niveau_num) |>
+  suppressMessages()    
+
+     
+```
+
+### Aanvullende rapportagemaanden afleiden
+ 
+RapportageMaand = 9 uit het A05 bestand wordt RapportageMaand 13-oktober
+```{r}
+A05_dpo_13okt <- A05_totaal %>%
+  filter(month(DatumRapportage) == 9) %>%
+  mutate(RapportageMaand = "13-Oktober")
+```
+
+RapportageMaand = 9 uit het A05 bestand wordt RapportageMaand 14-november
+```{r}
+A05_dpo_14nov <- A05_totaal %>%
+  filter(month(DatumRapportage) == 9) %>%
+  mutate(RapportageMaand = "14-November")
+```
+
+### Totaal bestand A05 maken
+Hier worden de databestand aan elkaar gekoppeld (UNION ALL in tsql):
+```{r}
+A05_dpo_totaal <- bind_rows(A05_totaal,
+                            A05_dpo_13okt,
+                            A05_dpo_14nov,
+                            A05_dpo_15dec,
+                            NRSP_totaal)
+```
+
+
+## Totaal
+
+Hier worden de databestanden  aan elkaar gekoppeld (JOIN in tsql):
+```{r}
+Starterset <- A05_dpo_totaal |>
+  left_join(VSVnormen, 
+            by = join_by(Niveau_num == Niveau, Teljaar == Teljaar)) 
+
+#write.csv(Starterset, "Starterset.csv")
+write.csv(Starterset, file.path(config::get("data_results_dir"), "Data_export_tbv_PowerBI", "Starterset.csv")) |>
+  suppressMessages()
+```
+
