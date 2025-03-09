@@ -1,0 +1,180 @@
+---
+title: "Kladblok"
+author: "Shirley"
+format: docx
+editor: visual
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).\
+\
+\
+
+# Lijst van bestandslocaties
+
+locaties \<- c("pad/naar/locatie1", "pad/naar/locatie2", "pad/naar/locatie3")
+
+# Functie om bestanden op te halen die "A05" bevatten
+
+get_matching_files \<- function(locatie) { all_files \<- list.files(locatie) matching_files \<- all_files\[grep("A05", all_files)\] return(matching_files) }
+
+# Initialiseer een lege lijst om alle bestanden op te slaan
+
+alle_matching_files \<- list()
+
+# Itereer door elke locatie en voeg de gevonden bestanden toe aan de lijst
+
+for (locatie in locaties) { matching_files \<- get_matching_files(locatie) alle_matching_files \<- c(alle_matching_files, file.path(locatie, matching_files)) }
+
+# Print de lijst van alle gevonden bestanden
+
+print(alle_matching_files)
+
+# Functie om een bestand in te lezen en unieke rijnamen toe te voegen
+
+read_file \<- function(file) { data \<- read.csv(file) \# Pas deze functie aan afhankelijk van het bestandstype, bijvoorbeeld read.csv, read.table, etc. data\$unique_id \<- seq_len(nrow(data)) \# Voeg een unieke ID kolom toe return(data) }
+
+# Functie om bestanden op te halen die "A05" bevatten
+
+get_matching_files \<- function(locatie) { all_files \<- list.files(locatie) matching_files \<- all_files\[grep("A05", all_files)\] return(matching_files) }
+
+# Initialiseer een lege lijst om alle bestanden op te slaan
+
+alle_matching_files \<- list()
+
+# Itereer door elke locatie en voeg de gevonden bestanden toe aan de lijst
+
+for (locatie in locaties) { matching_files \<- get_matching_files(locatie) alle_matching_files \<- c(alle_matching_files, file.path(locatie, matching_files)) }
+
+# Specificeer het pad naar de tijdelijke map elders op je computer
+
+temp_map \<- "C:/Users/s.kalkers/Graafschap College/M9400 DT - DataTeam - General/DUO/VSV Bestanden/Tijdelijke_CEDA_map" dir.create(temp_map, showWarnings = FALSE, recursive = TRUE)
+
+# Kopieer de bestanden naar de tijdelijke map
+
+for (file in alle_matching_files) { file.copy(file, file.path(temp_map, basename(file))) }
+
+# Functie om een bestand in te lezen
+
+read_file \<- function(file) { read.csv2(file)\
+}
+
+# Lees alle bestanden in de tijdelijke map in en combineer ze in één grote dataset
+
+temp_files \<- list.files(temp_map, full.names = TRUE) A05_totaal \<- do.call(rbind, lapply(temp_files, read_file))\|\> rename (BRIN = `X.BRIN`)
+
+Dit is een oefenbestand betreffende NRSP aanlevering:
+
+```{r}
+# Functie om een CSV-bestand in te lezen en de bestandsnaam toe te voegen als kolom
+read_NRSP_csv <- function(file_path) {
+  # Lees de CSV in
+  read_csv2(here::here(Locatie_NRSP, file_path)) |>
+  # Voeg de bestandsnaam toe als kolom    
+    mutate(BESTANDSNAAM = basename(file_path)) |>
+    rename (BURGERSERVICENUMMER = `#BURGERSERVICENUMMER`) |>
+  # Gelijk maken aan DPO tabellen  
+  mutate(
+    DatumRapportage = case_when(
+      grepl("VI", BESTANDSNAAM) ~ ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) + 1, "-03-01")),
+      grepl("DI", BESTANDSNAAM) ~ ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) + 1, "-11-01"))
+    ),
+    Peildatum1Okt = ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-10-01")),
+    Peildatum30sep = ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-09-30")),
+    KoppelNummer = ifelse(BURGERSERVICENUMMER == 0, ONDERWIJSNUMMER, BURGERSERVICENUMMER),
+    RapportageMaand = case_when(
+      grepl("VI", BESTANDSNAAM) ~ "16-NenR-V",
+      grepl("DI", BESTANDSNAAM) ~ "17-NenR-D"
+    ),
+    Teljaar = paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-", substr(BESTANDSNAAM, 5, 8)),
+    #Volgnummer = NA,
+    Bestand = case_when(
+      grepl("VI", BESTANDSNAAM) ~ "NRSP-V",
+      grepl("DI", BESTANDSNAAM) ~ "NRSP-D"
+    ),
+    Duo_Gemeentecode = as.character(GEMCODE),
+    Duo_RMC_regio = as.character(RMC_REGIO)
+  ) |>
+  select(DatumRapportage, Peildatum1Okt, Peildatum30sep, Crebocode = CREBO, KoppelNummer, RapportageMaand, Teljaar, Leerweg = ONDERWIJSSOORT, 
+         #Volgnummer, 
+         Bestand, Duo_Gemeentecode, Duo_RMC_regio)    
+}
+
+file_path <- "NRSP2023DI24ZZ.csv"
+
+NRSP <- read_NRSP_csv(file_path) |>
+  suppressMessages()
+
+# Bekijk de eerste paar rijen van de dataframe
+view(NRSP_met_bestandsnaam)
+
+```
+
+# Lijst van alle variabele namen en hun types
+
+var_types \<- sapply(ls(), function(x) class(get(x))) print(var_types)
+
+# Lijst van alle variabele namen, types en structuur
+
+var_info \<- sapply(ls(), function(x) { list( type = class(get(x)), structure = capture.output(str(get(x))) ) })
+
+# Print de informatie
+
+for (var in names(var_info)) { cat("Variable name:", var, "\n") cat("Type:", var_info\[\[var\]\]$type, "\n")
+  cat("Structure:\n", paste(var_info[[var]]$structure, collapse = "\n"), "\n\n") }
+
+```{r}
+
+A05_dpo_totaal |>
+  distinct(RapportageMaand) 
+
+
+# Lijst van alle variabele namen en hun structuur
+for (var in ls()) {
+  cat("Variable name:", var, "\n")
+  str(get(var))
+  cat("\n")
+}
+
+
+# Lijst van kolomnamen
+column_names <- names(A05_dpo_totaal)
+print(column_names)
+
+# Structuur van de tabel
+str(A05_dpo_totaal)
+
+
+# Types van de kolommen
+column_types <- sapply(A05_dpo_totaal, class)
+print(column_types)
+```
+
+```{r}
+# Voorbeeld data frame
+data <- data.frame(ID = 1:5, Name = c("A", "B", "C", "D", "E"))
+
+# Nieuwe kolom toevoegen met waarden van chr[1] tot chr[14520]
+data$new_column <- paste0("chr[", 1:14520, "]")
+
+# Bekijk de eerste paar rijen van je data frame
+head(data)
+```
