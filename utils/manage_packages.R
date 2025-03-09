@@ -35,14 +35,22 @@ packages_cran <- c(
     "usethis",
     "roxygen2",
     "this.path",
+    "here",
     #"pak",
 
     # quarto
     "quarto",
+    "knitr",
 
-
-    "cli",            # Create command line interfaces
+    # visualisation
     "ggplot2" ,       # Create plots
+    "scales",
+    "gt",
+    #"leaflet",
+    #"sf",
+
+    # main
+    "cli",            # Create command line interfaces
     #"LaF",            # Read data files without encoding (like ASCII)
     #"dataReporter",   # Create a data audit report
     # "rlang",          # Enable complex operations
@@ -50,7 +58,7 @@ packages_cran <- c(
     "janitor",        # Clean up names from special characters
     "lubridate",      # Work with dates and times
     "purrr",          # Work with functions and vectors
-    #"readxl",         # Read xlsx
+    "readxl",         # Read xlsx
     "readr",          # Read data (csv, tsv, and fwf)
     #"fs",             # Work with file systems
     #"rvest",          # Read html
@@ -60,23 +68,23 @@ packages_cran <- c(
     "tibble",         # Edit and create tibbles
     "tidyr",          # Tidy data in the tidyverse environment
     #"fst",            # Perform operations with large data files
-    "dplyr",          # Utilise the dplyr environment
+    "dplyr"#,          # Utilise the dplyr environment
     #"vvmover",
     #"vvconverter",
-    "corrr"           # Correlation matrix
+    #"corrr"           # Correlation matrix
 )
 
 # Include both the package name (for loading) and the account name (for renv snapshot)
 packages_github <- c(
     #"vusa",            # Utilise packages from the VU team
-    "pal",              # pal for using llm assistants
+    #"pal",              # pal for using llm assistants
     "gander"#,
     #"shinychat"
 )
 
 packages_github_with_account <- c(
     #"vusaverse/vusa",
-    "simonpcouch/pal",
+    #"simonpcouch/pal",
     "simonpcouch/gander"#,
     #"posit-dev/shinychat"
 )
@@ -111,7 +119,7 @@ options(renv.snapshot.filter = function(project) {
 # renv::snapshot(type = "custom")
 
 # TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
-renv::restore()
+renv::restore(confirm = FALSE)
 
 
 # Load packages
@@ -126,3 +134,4 @@ suppressMessages(purrr::walk(packages, ~library(.x,
 ## +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 suppressWarnings(clear_script_objects())
+

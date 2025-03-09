@@ -1,8 +1,10 @@
 
 default:
+  name: "Synthetish"
   data_base_dir: "data/synthetic"
-  brin_code: "24ZZ"
+  data_results_dir: "results/synthetic"
 
-graafschap_college:
-  data_base_dir: "data/graafschap_college"
-  brin_code: "24ZZ"
+graafschap:
+  name: "Graafschap College"
+  data_base_dir: "C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV"
+  data_results_dir: "C:/Users/s.kalkers/OneDrive - Graafschap College/Documenten/__Shirley/CEDA"

@@ -53,6 +53,7 @@ rsconnect/
 /data/*
 !/data/synthetic/
 !/data/reference/
+!/data/metadata/
 
 # quarto
 /_book/
@@ -62,5 +63,11 @@ rsconnect/
 /*_files/
 /*_cache/
 *_cache
+*.pdf
 *.html
 *html*
+
+# shiny
+inst/*/rsconnect/
+inst/*/dev/
+inst/*/data-raw/

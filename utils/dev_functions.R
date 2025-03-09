@@ -132,3 +132,4 @@ source_index <- function(..., script) {
     Regels2 <- setdiff(Regels, list)
     rm(list = Regels2, pos = ".GlobalEnv")
 }
+
