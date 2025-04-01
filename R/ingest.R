@@ -47,3 +47,31 @@ read_nrsp_file <- function(filename) {
         mutate(year = info$year,
                type = info$type)
 }
+
+
+#' Read A05 Monthly File
+#'
+#' @description
+#' Read and process an A05 monthly data file from the education starterset
+#'
+#' @param filename A single string specifying the file to read
+#'
+#' @returns
+#' A tibble containing the processed A05 data with standardized column names
+#'
+#' @importFrom readr read_csv2
+#' @importFrom dplyr rename mutate
+#'
+#' @export
+read_starterset_monthly_a05 <- function(filename) {
+    read_csv2(filename) |>
+        rename(
+            BRIN = `#BRIN`,
+            Leerweg = LEERWEG,
+            Crebocode = `ILT/CREBO`,
+            Duo_RMC_regio = RMC_REGIO
+        ) |>
+        mutate(bestand_pad = filename)
+}
+
+
