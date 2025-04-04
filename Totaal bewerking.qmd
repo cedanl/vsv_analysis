@@ -1,0 +1,243 @@
+---
+format: 
+  html:
+    page-layout: full
+execute: 
+  echo: false
+  warning: false
+  message: false
+---
+
+
+```{r}
+library(patchwork)
+source('Bewerking.R') 
+
+Kleur_achtergrond <- "seashell"
+Kleur_rand <- "seashell4"
+```
+
+```{r}
+Keuzemaand <- "2-November"  #"17-NenR-D"
+Keuzejaar <- "2023-2024" 
+```
+
+
+<!-- # `r paste("Aantal VSV-ers", Keuzejaar)` -->
+
+---
+format: html
+---
+ 
+```{r}
+mijn_titel <- paste("Aantal VSV-ers", Keuzejaar, Keuzemaand)
+```
+
+---
+title:  "`r mijn_titel`"
+---
+
+
+```{r Berekeningen} 
+`Aantal DUO VSV Startset` <- VSV_totaal |> 
+  filter(RapportageMaand == Keuzemaand,
+         Teljaar == Keuzejaar) |>
+  nrow() 
+
+
+`Aantal VSV` <- VSV_totaal |>
+  filter(RapportageMaand == Keuzemaand,
+         Teljaar == Keuzejaar,
+         VSV == 1) |>
+  nrow()
+
+
+`Percentage VSV` <- scales::percent(`Aantal VSV` / `Aantal DUO VSV Startset`, accuracy = 0.1)
+```
+
+```{r KPIs}
+Plot_waarde <- function(Keuze_variabele, Keuze_tekst){
+  ggplot() +
+  annotate("text", label = Keuze_variabele, x = 0, y = 0.1, size = 20) +
+  annotate("text", label = Keuze_tekst, x = 0, y = 0.02, size = 5) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = Kleur_achtergrond, 
+                                       colour = Kleur_rand)) +
+  ylim(c(0,0.2))
+}
+
+
+Plot_aantal_starterset <- Plot_waarde(`Aantal DUO VSV Startset`, "Aantal DUO VSV Startset") 
+
+Plot_aantal_VSV <- Plot_waarde(`Aantal VSV`, "Aantal VSV") 
+
+Plot_percentage_VSV <- Plot_waarde(`Percentage VSV`, "Percentage VSV") 
+```
+
+
+```{r}
+# Bereken het gemiddelde percentage per teljaar en sector
+VSVperc_per_Teljaar_Sector_Keuzemaand <- VSV_totaal |> 
+  filter(RapportageMaand == Keuzemaand) |>
+  count(Teljaar, Sector, RapportageMaand, VSV, name = "Aantal_VSV" ) |>
+  add_count(Teljaar, Sector, RapportageMaand, wt = Aantal_VSV, name = "Aantal") |>
+  filter(VSV == 1) |>
+   mutate(Deel_VSV = Aantal_VSV / Aantal,
+         Percentage_VSV = scales::percent(Aantal_VSV / Aantal, accuracy = 0.1)
+         )
+```
+
+
+```{r}
+# Maak het staafdiagram
+# Subset o.b.v. RapportageMaand (Keuzemaand)
+
+Plot_sector_percentageVSV <- ggplot(VSVperc_per_Teljaar_Sector_Keuzemaand, 
+       aes(x = Sector,
+           y = Deel_VSV,
+           fill = Teljaar)) +
+  geom_col(position = position_dodge(width = 0.8)) +
+  geom_text(aes(label = Percentage_VSV),
+            position = position_dodge(width = 0.8),
+            vjust = 1.2,
+            color = "seashell",
+            fontface = "bold") +
+  # scale_y_continuous(labels = scales::percent_format(accuracy = 0.1)) +
+  scale_fill_manual(values = c("2021-2022" = "peachpuff1",
+                               "2022-2023" = "peachpuff2",
+                               "2023-2024" = "peachpuff3",
+                               "2024-2025" = "peachpuff4")) +
+  theme_minimal(base_family = "sans") +
+  theme(
+    plot.background = element_rect(fill = "seashell"),
+    axis.text.y = element_blank(),
+    legend.position = "top",
+    legend.justification = "left"
+  ) +
+  labs(
+    title = "Percentage VSV per sector",
+    x = NULL,
+    y = NULL,
+    fill = "Schooljaar"
+  )
+```
+
+
+
+```{r}
+# Bereken het gemiddelde percentage per teljaar en niveau
+VSVperc_per_Teljaar_Niveau_Keuzemaand <- VSV_totaal |> 
+  filter(RapportageMaand == Keuzemaand) |>
+  count(Teljaar, Niveau_num, Niveau, RapportageMaand, VSV, name = "Aantal_VSV" ) |>
+  add_count(Teljaar, Niveau_num, Niveau, RapportageMaand, wt = Aantal_VSV, name = "Aantal") |>
+  filter(VSV == 1) |>
+   mutate(Deel_VSV = Aantal_VSV / Aantal,
+         Percentage_VSV = scales::percent(Aantal_VSV / Aantal, accuracy = 0.1)
+         )
+```
+
+
+```{r}
+# Maak het staafdiagram
+# Subset o.b.v. RapportageMaand (Keuzemaand)
+
+Plot_niveau_percentageVSV <- ggplot(VSVperc_per_Teljaar_Niveau_Keuzemaand, 
+       aes(x = Niveau,
+           y = Deel_VSV,
+           fill = Teljaar)) +
+  geom_col(position = position_dodge(width = 0.8)) +
+  geom_text(aes(label = Percentage_VSV),
+            position = position_dodge(width = 0.8),
+            vjust = 1.2,
+            color = "seashell",
+            fontface = "bold") +
+  # scale_y_continuous(labels = scales::percent_format(accuracy = 0.1)) +
+  scale_fill_manual(values = c("2021-2022" = "peachpuff1",
+                               "2022-2023" = "peachpuff2",
+                               "2023-2024" = "peachpuff3",
+                               "2024-2025" = "peachpuff4")) +
+  theme_minimal(base_family = "sans") +
+  theme(
+    plot.background = element_rect(fill = "seashell"),
+    axis.text.y = element_blank(),
+    legend.position = "top",
+    legend.justification = "left"
+  ) +
+  labs(
+    title = "Percentage VSV per niveau",
+    x = NULL,
+    y = NULL,
+    fill = "Schooljaar"
+  )
+```
+
+
+
+
+
+```{r}
+# Bereken het gemiddelde percentage per teljaar en niveau
+VSVperc_per_Teljaar_Leerweg_Keuzemaand <- VSV_totaal |> 
+  filter(RapportageMaand == Keuzemaand) |>
+  count(Teljaar, Leerweg, RapportageMaand, VSV, name = "Aantal_VSV" ) |>
+  add_count(Teljaar, Leerweg, RapportageMaand, wt = Aantal_VSV, name = "Aantal") |>
+  filter(VSV == 1) |>
+   mutate(Deel_VSV = Aantal_VSV / Aantal,
+         Percentage_VSV = scales::percent(Aantal_VSV / Aantal, accuracy = 0.1)
+         )
+```
+
+
+```{r}
+# Maak het staafdiagram
+# Subset o.b.v. RapportageMaand (Keuzemaand)
+
+Plot_niveau_percentageVSV <- ggplot(VSVperc_per_Teljaar_Leerweg_Keuzemaand, 
+       aes(x = Leerweg,
+           y = Deel_VSV,
+           fill = Teljaar)) +
+  geom_col(position = position_dodge(width = 0.8)) +
+  geom_text(aes(label = Percentage_VSV),
+            position = position_dodge(width = 0.8),
+            vjust = 1.2,
+            color = "seashell",
+            fontface = "bold") +
+  # scale_y_continuous(labels = scales::percent_format(accuracy = 0.1)) +
+  scale_fill_manual(values = c("2021-2022" = "peachpuff1",
+                               "2022-2023" = "peachpuff2",
+                               "2023-2024" = "peachpuff3",
+                               "2024-2025" = "peachpuff4")) +
+  theme_minimal(base_family = "sans") +
+  theme(
+    plot.background = element_rect(fill = "seashell"),
+    axis.text.y = element_blank(),
+    legend.position = "top",
+    legend.justification = "left"
+  ) +
+  labs(
+    title = "Percentage VSV per leerweg",
+    x = NULL,
+    y = NULL,
+    fill = "Schooljaar"
+  )
+
+```
+
+
+
+
+
+
+
+
+ 
+```{r Overzichtsdashboard}
+#| fig-width: 10
+#| fig-heigth: 3
+#| 
+Plot_bovenste_regel <- Plot_aantal_starterset + plot_spacer() + Plot_aantal_VSV + plot_spacer() + Plot_percentage_VSV +
+  plot_layout(widths = c(10, 0.5, 10, 0.5, 10)) 
+
+Plot_bovenste_regel / plot_spacer() / Plot_sector_percentageVSV +
+ plot_layout(heights = c(1, 0.33, 2)) 
+```
