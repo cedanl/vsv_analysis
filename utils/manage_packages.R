@@ -35,8 +35,8 @@ packages_cran <- c(
     "usethis",
     "roxygen2",
     "this.path",
-    "here",
-    #"pak",
+    "cli",            # Create command line interfaces
+    "pak",
 
     # quarto
     "quarto",
@@ -44,29 +44,28 @@ packages_cran <- c(
 
     # visualisation
     "ggplot2" ,       # Create plots
-    "scales",
-    "gt",
-    #"leaflet",
-    #"sf",
+    "patchwork",      # Stitch plots together
+    #"scales",         # Scale axes
+    #"gt",             # Create publication-ready tables
+    #"leaflet",        # Create interactive maps
 
     # main
-    "cli",            # Create command line interfaces
     #"LaF",            # Read data files without encoding (like ASCII)
     #"dataReporter",   # Create a data audit report
     # "rlang",          # Enable complex operations
     "config",         # Set up configuration files and functions
-    "janitor",        # Clean up names from special characters
+    #"janitor",        # Clean up names from special characters
     "lubridate",      # Work with dates and times
     "purrr",          # Work with functions and vectors
-    "readxl",         # Read xlsx
+    #"readxl",         # Read xlsx
     "readr",          # Read data (csv, tsv, and fwf)
     #"fs",             # Work with file systems
     #"rvest",          # Read html
     #"slackr",         # Send messages in Slack
     #"stringi",        # Work with other strings
-    "stringr",        # Work with strings
-    "tibble",         # Edit and create tibbles
-    "tidyr",          # Tidy data in the tidyverse environment
+    #"stringr",        # Work with strings
+    #"tibble",         # Edit and create tibbles
+    #"tidyr",          # Tidy data in the tidyverse environment
     #"fst",            # Perform operations with large data files
     "dplyr"#,          # Utilise the dplyr environment
     #"vvmover",
@@ -78,14 +77,14 @@ packages_cran <- c(
 packages_github <- c(
     #"vusa",            # Utilise packages from the VU team
     #"pal",              # pal for using llm assistants
-    "gander"#,
+    #"gander"#,
     #"shinychat"
 )
 
 packages_github_with_account <- c(
     #"vusaverse/vusa",
     #"simonpcouch/pal",
-    "simonpcouch/gander"#,
+    #"simonpcouch/gander"#,
     #"posit-dev/shinychat"
 )
 
