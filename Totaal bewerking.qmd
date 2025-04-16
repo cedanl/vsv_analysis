@@ -3,6 +3,8 @@ format:
   html:
     page-layout: full
 execute: 
+  cache: true
+  freeze: auto
   echo: false
   warning: false
   message: false
@@ -18,8 +20,8 @@ Kleur_rand <- "seashell4"
 ```
 
 ```{r}
-Keuzemaand <- "2-November"  #"17-NenR-D"
-Keuzejaar <- "2023-2024" 
+Keuzemaand <- "12-September"  #"17-NenR-D"
+Keuzejaar <- "2022-2023" 
 ```
 
 
@@ -30,7 +32,7 @@ format: html
 ---
  
 ```{r}
-mijn_titel <- paste("Aantal VSV-ers", Keuzejaar, Keuzemaand)
+mijn_titel <- paste("Aantal VSV-ers", Keuzejaar, "in rapportagemaand", Keuzemaand)
 ```
 
 ---
@@ -77,12 +79,14 @@ Plot_percentage_VSV <- Plot_waarde(`Percentage VSV`, "Percentage VSV")
 
 ```{r}
 # Bereken het gemiddelde percentage per teljaar en sector
+
 VSVperc_per_Teljaar_Sector_Keuzemaand <- VSV_totaal |> 
   filter(RapportageMaand == Keuzemaand) |>
-  count(Teljaar, Sector, RapportageMaand, VSV, name = "Aantal_VSV" ) |>
-  add_count(Teljaar, Sector, RapportageMaand, wt = Aantal_VSV, name = "Aantal") |>
-  filter(VSV == 1) |>
-   mutate(Deel_VSV = Aantal_VSV / Aantal,
+    group_by(Teljaar, Sector, RapportageMaand) |>
+    summarise(Aantal_VSV = sum(VSV),
+              Aantal = n()) |>
+  ungroup() |>
+    mutate(Deel_VSV = Aantal_VSV / Aantal,
          Percentage_VSV = scales::percent(Aantal_VSV / Aantal, accuracy = 0.1)
          )
 ```
@@ -100,7 +104,7 @@ Plot_sector_percentageVSV <- ggplot(VSVperc_per_Teljaar_Sector_Keuzemaand,
   geom_text(aes(label = Percentage_VSV),
             position = position_dodge(width = 0.8),
             vjust = 1.2,
-            color = "seashell",
+            color = "#483E34",
             fontface = "bold") +
   # scale_y_continuous(labels = scales::percent_format(accuracy = 0.1)) +
   scale_fill_manual(values = c("2021-2022" = "peachpuff1",
@@ -115,7 +119,7 @@ Plot_sector_percentageVSV <- ggplot(VSVperc_per_Teljaar_Sector_Keuzemaand,
     legend.justification = "left"
   ) +
   labs(
-    title = "Percentage VSV per sector",
+    title = "Sector",
     x = NULL,
     y = NULL,
     fill = "Schooljaar"
@@ -128,10 +132,11 @@ Plot_sector_percentageVSV <- ggplot(VSVperc_per_Teljaar_Sector_Keuzemaand,
 # Bereken het gemiddelde percentage per teljaar en niveau
 VSVperc_per_Teljaar_Niveau_Keuzemaand <- VSV_totaal |> 
   filter(RapportageMaand == Keuzemaand) |>
-  count(Teljaar, Niveau_num, Niveau, RapportageMaand, VSV, name = "Aantal_VSV" ) |>
-  add_count(Teljaar, Niveau_num, Niveau, RapportageMaand, wt = Aantal_VSV, name = "Aantal") |>
-  filter(VSV == 1) |>
-   mutate(Deel_VSV = Aantal_VSV / Aantal,
+    group_by(Teljaar, Niveau_num, Niveau, RapportageMaand) |>
+    summarise(Aantal_VSV = sum(VSV),
+              Aantal = n()) |>
+  ungroup() |>
+    mutate(Deel_VSV = Aantal_VSV / Aantal,
          Percentage_VSV = scales::percent(Aantal_VSV / Aantal, accuracy = 0.1)
          )
 ```
@@ -142,20 +147,28 @@ VSVperc_per_Teljaar_Niveau_Keuzemaand <- VSV_totaal |>
 # Subset o.b.v. RapportageMaand (Keuzemaand)
 
 Plot_niveau_percentageVSV <- ggplot(VSVperc_per_Teljaar_Niveau_Keuzemaand, 
-       aes(x = Niveau,
+       aes(x = Niveau_num,
            y = Deel_VSV,
            fill = Teljaar)) +
-  geom_col(position = position_dodge(width = 0.8)) +
-  geom_text(aes(label = Percentage_VSV),
-            position = position_dodge(width = 0.8),
+  geom_col(position = position_dodge(width = 0.9)) +
+  geom_text(aes(label = Percentage_VSV#, 
+               # color = ifelse(Deel_VSV > 0.008,
+               #                "groot",
+               #                "klein"
+               #                )
+               ),
+            position = position_dodge(width = 0.9),
             vjust = 1.2,
-            color = "seashell",
+            color = "#483E34",
             fontface = "bold") +
   # scale_y_continuous(labels = scales::percent_format(accuracy = 0.1)) +
   scale_fill_manual(values = c("2021-2022" = "peachpuff1",
                                "2022-2023" = "peachpuff2",
                                "2023-2024" = "peachpuff3",
                                "2024-2025" = "peachpuff4")) +
+ # scale_color_manual(values = c(groot = "peachpuff1",
+ #                               klein = "red")) +
+ # guides(color = "none") +
   theme_minimal(base_family = "sans") +
   theme(
     plot.background = element_rect(fill = "seashell"),
@@ -164,7 +177,7 @@ Plot_niveau_percentageVSV <- ggplot(VSVperc_per_Teljaar_Niveau_Keuzemaand,
     legend.justification = "left"
   ) +
   labs(
-    title = "Percentage VSV per niveau",
+    title = "Niveau",
     x = NULL,
     y = NULL,
     fill = "Schooljaar"
@@ -177,14 +190,17 @@ Plot_niveau_percentageVSV <- ggplot(VSVperc_per_Teljaar_Niveau_Keuzemaand,
 
 ```{r}
 # Bereken het gemiddelde percentage per teljaar en niveau
+
 VSVperc_per_Teljaar_Leerweg_Keuzemaand <- VSV_totaal |> 
   filter(RapportageMaand == Keuzemaand) |>
-  count(Teljaar, Leerweg, RapportageMaand, VSV, name = "Aantal_VSV" ) |>
-  add_count(Teljaar, Leerweg, RapportageMaand, wt = Aantal_VSV, name = "Aantal") |>
-  filter(VSV == 1) |>
-   mutate(Deel_VSV = Aantal_VSV / Aantal,
+    group_by(Teljaar, Leerweg, RapportageMaand) |>
+    summarise(Aantal_VSV = sum(VSV),
+              Aantal = n()) |>
+  ungroup() |>
+    mutate(Deel_VSV = Aantal_VSV / Aantal,
          Percentage_VSV = scales::percent(Aantal_VSV / Aantal, accuracy = 0.1)
          )
+
 ```
 
 
@@ -192,7 +208,7 @@ VSVperc_per_Teljaar_Leerweg_Keuzemaand <- VSV_totaal |>
 # Maak het staafdiagram
 # Subset o.b.v. RapportageMaand (Keuzemaand)
 
-Plot_niveau_percentageVSV <- ggplot(VSVperc_per_Teljaar_Leerweg_Keuzemaand, 
+Plot_leerweg_percentageVSV <- ggplot(VSVperc_per_Teljaar_Leerweg_Keuzemaand, 
        aes(x = Leerweg,
            y = Deel_VSV,
            fill = Teljaar)) +
@@ -200,7 +216,7 @@ Plot_niveau_percentageVSV <- ggplot(VSVperc_per_Teljaar_Leerweg_Keuzemaand,
   geom_text(aes(label = Percentage_VSV),
             position = position_dodge(width = 0.8),
             vjust = 1.2,
-            color = "seashell",
+            color = "#483E34", #"#695A4C"
             fontface = "bold") +
   # scale_y_continuous(labels = scales::percent_format(accuracy = 0.1)) +
   scale_fill_manual(values = c("2021-2022" = "peachpuff1",
@@ -215,7 +231,7 @@ Plot_niveau_percentageVSV <- ggplot(VSVperc_per_Teljaar_Leerweg_Keuzemaand,
     legend.justification = "left"
   ) +
   labs(
-    title = "Percentage VSV per leerweg",
+    title = "Leerweg",
     x = NULL,
     y = NULL,
     fill = "Schooljaar"
@@ -227,17 +243,47 @@ Plot_niveau_percentageVSV <- ggplot(VSVperc_per_Teljaar_Leerweg_Keuzemaand,
 
 
 
-
-
-
- 
 ```{r Overzichtsdashboard}
+#| eval: false
 #| fig-width: 10
-#| fig-heigth: 3
-#| 
+#| fig-height: 12
 Plot_bovenste_regel <- Plot_aantal_starterset + plot_spacer() + Plot_aantal_VSV + plot_spacer() + Plot_percentage_VSV +
   plot_layout(widths = c(10, 0.5, 10, 0.5, 10)) 
 
-Plot_bovenste_regel / plot_spacer() / Plot_sector_percentageVSV +
- plot_layout(heights = c(1, 0.33, 2)) 
+Plot_onderste_regel <- Plot_niveau_percentageVSV + plot_spacer() + Plot_leerweg_percentageVSV +
+  plot_layout(widths = c(10, 0.5, 10))
+
+(Plot_bovenste_regel / 
+  plot_spacer() / 
+  Plot_sector_percentageVSV / 
+  plot_spacer() / 
+  Plot_onderste_regel) +
+  plot_layout(heights = c(1, 0.1, 1.5, 0.1, 1)) &
+  theme(plot.margin = margin(10, 10, 10, 10))
 ```
+
+```{r}
+#| fig-width: 12
+#| fig-height: 8
+
+layout <- "
+AABBCC
+AABBCC
+######
+DDDDDD
+DDDDDD
+######
+EEEFFF
+EEEFFF
+"
+
+Plot_aantal_starterset + Plot_aantal_VSV + Plot_percentage_VSV +
+  Plot_sector_percentageVSV + 
+  Plot_niveau_percentageVSV + Plot_leerweg_percentageVSV +
+  plot_layout(design = layout,
+              heights = c(1, 1, 0.2, 1, 1, 0.2, 1, 1),
+              guides = "collect") &
+  theme(plot.margin = margin(5, 5, 5, 5))
+```
+
+
