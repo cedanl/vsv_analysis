@@ -5,13 +5,17 @@
 
 source("utils/dev_functions.R")
 
-old_lib_paths <- .libPaths()
-.libPaths(c(user_lib, .libPaths()))
+renv_lib_paths <- .libPaths()
+
+# Set only user_lib to library path
+assign(".lib.loc", user_lib, envir = environment(.libPaths))
+
+print(.libPaths())
 # pak is needed for renv, otherwise install it
-if (!requireNamespace("pak", quietly = TRUE)) {
-    install.packages("pak")
+if (!("pak" %in% rownames(installed.packages(lib.loc = user_lib)))) {
+    install.packages("pak", lib = .libPaths())
 }
-.libPaths(old_lib_paths)
+.libPaths(renv_lib_paths)
 
 source("utils/manage_packages.R")
 

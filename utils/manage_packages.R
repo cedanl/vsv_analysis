@@ -121,7 +121,6 @@ options(renv.snapshot.filter = function(project) {
 # Probeer met pak, fallback naar standaard renv restore
 tryCatch({
     # TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
-    options(renv.config.pak.enabled = FALSE)
     renv::restore(confirm = FALSE)
 }, error = function(e) {
     message("Installation error, fallback to more simple installation.")
@@ -137,7 +136,8 @@ if (config::get("developer_mode") == TRUE) {
                       "usethis",
                       "roxygen2")
 
-    .libPaths(c(user_lib, .libPaths()))
+    ## Set only user_lib to library path
+    assign(".lib.loc", user_lib, envir = environment(.libPaths))
 
     for (pkg in dev_packages) {
         if (!(pkg %in% rownames(installed.packages()))) {
@@ -145,11 +145,11 @@ if (config::get("developer_mode") == TRUE) {
         }
     }
     # Use renv location first but also make user_lib available
-    .libPaths(c(old_lib_paths, user_lib))
+    .libPaths(c(renv_lib_paths, user_lib))
 }
 
 # Remove since no longer necessary, items were made in .Rprofile and 00_setup.R
-rm(old_lib_paths, user_lib)
+rm(renv_lib_paths, user_lib)
 
 
 # TODO Set to TRUE when adding packages to check if there are problematic conflicts
