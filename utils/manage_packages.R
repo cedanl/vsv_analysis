@@ -30,20 +30,21 @@ packages_base <- c(
 packages_cran <- c(
 
     # develop package
-    "slider",
-    "devtools",
-    "usethis",
-    "roxygen2",
+    #"slider",
+    #"devtools",
+    #"usethis",
+    #"roxygen2",
+    "pkgload",      # Load and test packages
+    "here",           # Set up file paths, is this necessary with this.path
     "this.path",
     "cli",            # Create command line interfaces
-    "pak",
 
-    # quarto
+    # rendering
     "quarto",
     "knitr",
 
-    # visualisation
-    "ggplot2" ,       # Create plots
+    # visualisation and tables
+    "ggplot2",       # Create plots
     "patchwork",      # Stitch plots together
     #"scales",         # Scale axes
     #"gt",             # Create publication-ready tables
@@ -63,7 +64,7 @@ packages_cran <- c(
     #"rvest",          # Read html
     #"slackr",         # Send messages in Slack
     #"stringi",        # Work with other strings
-    #"stringr",        # Work with strings
+    "stringr",        # Work with strings
     #"tibble",         # Edit and create tibbles
     #"tidyr",          # Tidy data in the tidyverse environment
     #"fst",            # Perform operations with large data files
@@ -117,16 +118,44 @@ options(renv.snapshot.filter = function(project) {
 # TODO Un-edit when adding packages above to include them in snapshot
 # renv::snapshot(type = "custom")
 
-# TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
-renv::restore(confirm = FALSE)
+# Probeer met pak, fallback naar standaard renv restore
+tryCatch({
+    # TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
+    options(renv.config.pak.enabled = FALSE)
+    renv::restore(confirm = FALSE)
+}, error = function(e) {
+    message("Installation error, fallback to more simple installation.")
+    options(renv.config.pak.enabled = FALSE)
+    renv::restore(confirm = FALSE)
+})
+
+
+Sys.setenv(R_CONFIG_ACTIVE = "dev")
+
+## Install packages not inside project (renv) but for user
+if (config::get("developer_mode") == TRUE) {
+    dev_packages <- c("devtools",
+                      "usethis",
+                      "roxygen2")
+    .libPaths(c(user_lib, .libPaths()))
+    for (package in dev_packages) {
+        if (!requireNamespace(package, quietly = TRUE)) {
+            install.packages(package)
+        }
+    }
+    .libPaths(old_lib_paths)
+}
+
+
+# Remove since no longer necessary, items were made in .Rprofile and 00_setup.R
+rm(old_lib_paths, user_lib)
+
 
 
 # Load packages
 # TODO Set to TRUE when adding packages to check if there are problematic conflicts
-warn_conflicts <- FALSE
 suppressMessages(purrr::walk(packages, ~library(.x,
-                                                character.only = TRUE,
-                                                warn.conflicts = warn_conflicts)))
+                                                character.only = TRUE)))
 
 ## +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## WRITE-AND-CLEAR ####

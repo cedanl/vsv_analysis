@@ -13,4 +13,5 @@ Imports:
     lubridate,
     readr,
     rlang,
-    config
+    config,
+    stringr

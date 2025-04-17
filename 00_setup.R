@@ -5,11 +5,13 @@
 
 source("utils/dev_functions.R")
 
+old_lib_paths <- .libPaths()
+.libPaths(c(user_lib, .libPaths()))
 # pak is needed for renv, otherwise install it
 if (!requireNamespace("pak", quietly = TRUE)) {
-    print(user_lib)
-    install.packages("pak", lib = user_lib)
+    install.packages("pak")
 }
+.libPaths(old_lib_paths)
 
 source("utils/manage_packages.R")
 

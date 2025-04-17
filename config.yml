@@ -3,6 +3,10 @@ default:
   name: "Synthetish"
   data_base_dir: "data/synthetic"
   data_results_dir: "results/synthetic"
+  developer_mode: false
+
+dev:
+  developer_mode: true
 
 ...:
   name: "..."
