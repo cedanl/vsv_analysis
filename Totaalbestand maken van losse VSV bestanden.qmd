@@ -1,0 +1,833 @@
+---
+title: "Voortijdig schoolverlater (VSV) totaal bestand maken"
+
+subtitle: "Eerste inzichten in DUO VSV data"
+affiliation: "CEDA - Npuls"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+editor: visual
+format: 
+  html:
+    toc: true
+    toc-title: Inhoudsopgave
+    code-fold: true
+    code-summary: "Laat code zien"
+execute:
+  cache: true
+  freeze: auto
+  include: true
+  warning: false
+---
+
+```{r}
+#| label: setup
+#| cache: false
+#| output: false
+#| include: false
+#| freeze: false
+
+# Load required libraries
+source("00_setup.R")
+
+```
+
+## Vooraf
+
+In dit project worden DUO data m.b.t. voortijdig schoolverlaters (VSV) opgehaald, bewerkt en gekoppeld, zodat er een analysebestand onstaat. Vervolgens wordt een eerste aanzet gedaan om de data te valideren en te visualiseren. Het is mogelijk gebruik te maken van synthetische data (gesimuleerde data) en/of data van de instelling / school. 
+
+##### Instelling toevoegen
+Om deze keuze te maken zal eerste het volgende bestand aangepast moeten worden. config.yml.
+
+Dummy data: dan hoef je niets aan te passen in het bestand, maar dan moet je onderstaande wel de keuze maken om .... te activeren (haal het # voor de regel weg en zet een # voor de volgende regel).
+Instellings data: open de yml, voeg instelling toe en sla op ....
+
+Dit staat nu in de config.yml:
+```{r}
+#| echo: false
+cat(readLines(here::here("config.yml")), sep = "\n")
+```
+
+
+```{r}
+#| echo: false
+#| results: asis
+source(here::here("helpers.R"))
+cat("Om het config.yml bestand te openen, voer `open_config()` uit in de Console.")
+```
+
+
+Volg deze stappen om je eigen instelling toe te voegen:
+
+- <u>Instellingsnaam</u>: Vervang `...` met je **instellingsnaam**
+- <u>Naam in configuratie</u>: Vervang `"..."` met **Instellingsnaam**
+- <u>Bronmap</u>: Vervang `"..."` met de **link naar de map** waarin de VSV-bestanden staan
+- <u>Doelmap</u>: Vervang `"..."` met de **link naar de map** waarin de resultaten naar toe gestuurd moeten worden
+
+
+```{r}
+# Sys.setenv(R_CONFIG_ACTIVE = "Synthetish")
+Sys.setenv(R_CONFIG_ACTIVE = "graafschap")
+```
+
+
+
+
+
+## Analysebestand maken
+
+### 1. Data VSV-Startpopulatie inladen
+
+We laden hier de data in om een Startpopulatie dataset te maken. De Startpopulatie wordt opgebouwd uit meerdere bestanden, namelijk de A05 bestanden (12x) en de NRSP data (1x voorlopige dataset en 1x definitieve dataset).
+
+Eerst de locatie bepalen waar de bestanden opgehaald moeten worden:
+
+
+```{r}
+bestanden <- c(list.files(config::get("data_base_dir"), recursive = TRUE, full.names=TRUE))
+```
+
+
+
+#### 1a. A05-bestanden - Startpopulatie
+
+De A05 bestanden bevatten alle jongeren die aan het begin van het rapportagejaar (1 oktober) een relevante inschrijving hebben in et Register Onderwijsdeelnemers (ROD) en die bij uitval mogelijk een VSV-er zouden kunnen zijn. De A-rapportages zijn tussenrapportages. In de A-rapportages worden dan ook leerlingen die zich ten opzichte van de startpopulatie uitschrijven en zich (nog) niet opnieuw hebben ingeschreven, gesignaleerd: de workload. Overigens zijn de gegevens uit het Register Onderwijsdeelnemers die de basis zijn voor de startpopulatie van de A-rapportages niet direct definitief: dat gebeurt pas in de loop van het schooljaar. De Startpopulatie wordt dus ook maandelijks opnieuw bepaald, twaalf maanden achter elkaar.
+
+
+##### A05
+
+Dit wordt de basis voor het A05 bestand (bestanden oktober t/m september):
+
+```{r}
+A05_totaal <- fs::fs_path(bestanden[grep("A05", bestanden)]) %>%
+  set_names(x = ., nm = .) |>
+  map_dfr(read_csv2, .id = "BESTANDSNAAM" ) |>
+  mutate(BESTANDSNAAM = str_sub(BESTANDSNAAM, start = -18, end = -1)) |>
+  rename (BRIN = `#BRIN`,
+          Leerweg = LEERWEG,
+          Crebocode = `ILT/CREBO`,
+          #KoppelNummer = BSN_ONDERWIJSNR,
+          Duo_RMC_regio = RMC_REGIO) |>
+  mutate(
+    DatumRapportage = ymd(paste0(RAPPORTAGE_MAAND, "01")),
+    Peildatum1Okt = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                               paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-10-01"),
+                               paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-10-01"))),
+    Peildatum30sep = ymd(ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                                paste0(substr(RAPPORTAGE_MAAND, 1, 4), "-09-30"),
+                                paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1, "-09-30"))),
+    RapportageMaand = case_when(
+      substr(RAPPORTAGE_MAAND, 5, 6) == "10" ~ "1-Oktober",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "11" ~ "2-November",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "12" ~ "3-December",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "01" ~ "4-Januari",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "02" ~ "5-Februari",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "03" ~ "6-Maart",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "04" ~ "7-April",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "05" ~ "8-Mei",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "06" ~ "9-Juni",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "07" ~ "10-Juli",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "08" ~ "11-Augustus",
+      substr(RAPPORTAGE_MAAND, 5, 6) == "09" ~ "12-September"
+    ),
+    Teljaar = ifelse(as.integer(substr(RAPPORTAGE_MAAND, 5, 6)) %in% 10:12,
+                     paste0(substr(RAPPORTAGE_MAAND, 1, 4),
+                            "-",
+                            as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) + 1),
+                     paste0(as.integer(substr(RAPPORTAGE_MAAND, 1, 4)) - 1,
+                            "-",
+                            substr(RAPPORTAGE_MAAND, 1, 4))),
+    Volgnummer = gsub("C", "", INSCHR_VLGNR),
+    KoppelNummer = as.character(BSN_ONDERWIJSNR),
+    Bestand = "A05",
+    Duo_Gemeentecode = as.character(GEMCODE),
+    # Deze kolommen bevat het DPO bestand niet:
+    GemeenteNaam = "",
+    Geslacht = "",
+    Geboortedatum = dmy(GEBOORTEDATUM),
+    PostcodeCijfers = as.integer(substr(POSTCODE, 1, 4)),
+    OnderwijsSoort = "",
+    Duo_RMC_regioNaam = "",
+    Niveau_num = as.integer(ifelse(regmatches(NIVEAU, gregexpr("[0-9]+", NIVEAU)) == 0, NA, regmatches(NIVEAU, gregexpr("[0-9]+", NIVEAU)))),
+    Indicatie_startkwalificatie = INDICATIE_STARTKWALIFICATIE
+  ) |>
+
+  select(#Rapportage_Maand = RAPPORTAGE_MAAND,
+         Bestandsnaam = BESTANDSNAAM, RapportageMaand, DatumRapportage, Peildatum1Okt, Peildatum30sep, Crebocode, KoppelNummer,
+         RapportageMaand, Teljaar, Leerweg, Volgnummer, Bestand, Duo_Gemeentecode, Duo_RMC_regio,
+         # Deze kolommen bevat het DPO bestand niet:
+         CreboOmschrijving = `ILT/CREBO_OMS`, GemeenteNaam, Geslacht, Geboortedatum, Woongemeente = WOONGEMEENTE, Woonplaats = WOONPLAATS,
+         PostcodeCijfers, Postcode = POSTCODE,
+         Niveau = NIVEAU, OnderwijsSoort, Indicatie_startkwalificatie, Duo_RMC_regioNaam, BRIN,
+         OnderwijsAanbieder_Code = ONDERWIJSAANBIEDERCODE,Sector = ONDERWIJSAANBIEDER_NAAM,
+         OnderwijsLocatie_Code = ONDERWIJSLOCATIECODE, OnderwijsLocatie_Postcode = ONDERWIJSLOCATIE_POSTCODE,
+         Niveau_num) |>
+  suppressMessages()
+```
+
+
+Omdat de bestanden, die de VSV-ers bevatten vijftien maanden aangeleverd worden, dupliceren we het laatste aangeleverde A05 bestand om ook de 13e t/m de 15e maand aan te maken.
+
+RapportageMaand = 9 uit het A05 bestand wordt RapportageMaand 13-oktober:
+
+```{r}
+A05_dpo_13okt <- A05_totaal %>%
+  filter(month(DatumRapportage) == 9) %>%
+  mutate(RapportageMaand = "13-Oktober")
+```
+
+RapportageMaand = 9 uit het A05 bestand wordt RapportageMaand 14-november:
+
+```{r}
+A05_dpo_14nov <- A05_totaal %>%
+  filter(month(DatumRapportage) == 9) %>%
+  mutate(RapportageMaand = "14-November")
+```
+
+RapportageMaand = 9 uit het A05 bestand wordt RapportageMaand 15-december:
+
+```{r}
+A05_dpo_15dec <- A05_totaal %>%
+  filter(month(DatumRapportage) == 9) %>%
+  mutate(RapportageMaand = "15-December")
+```
+
+Onderstaande een overzicht van de ingelezen A05-bestanden en het aantal regels per bestand:
+
+```{r}
+A05_tabel <- A05_totaal |>
+    filter(grepl("A05I24ZZ.csv", Bestandsnaam)) |> 
+    group_by(Teljaar, RapportageMaand, Bestandsnaam) |> 
+    summarise(Aantal = n()) |>
+    arrange(Teljaar, RapportageMaand)
+```
+
+
+
+```{r}
+#| fig-width: 10
+#| out-width: "100%"
+
+# Maak een hulpkolom om te sorteren op maandnummer
+A05_tabel_sorted <- A05_tabel |>
+  # Extraheer het maandnummer uit RapportageMaand
+  mutate(MaandNummer = as.numeric(sub("(\\d+)-.+", "\\1", RapportageMaand))) |>
+  # Sorteer op Teljaar, dan MaandNummer, dan Bestandsnaam
+  arrange(Teljaar, MaandNummer, Bestandsnaam) |>
+  # Verwijder de hulpkolom voor het tonen
+  select(-MaandNummer)
+
+# Tabel met vooraf gesorteerde data
+DT::datatable(
+  A05_tabel_sorted,
+  options = list(
+    pageLength = 21,
+    dom = 'ft',
+    ordering = TRUE,
+    autoWidth = TRUE,
+    search = list(regex = TRUE, caseInsensitive = TRUE),
+    initComplete = DT::JS(
+      "function(settings, json) {",
+      "  $(this.api().table().container()).css({'font-family': 'Arial, sans-serif'});",
+      "}"
+    ),
+    rowCallback = DT::JS(
+      "function(row, data, index) {",
+      "  if (index % 2 === 0) {",
+      "    $(row).css('background-color', 'white');",
+      "  } else {",
+      "    $(row).css('background-color', 'seashell');", 
+      "  }",
+      "}"
+    )
+  ),
+  rownames = TRUE,
+  filter = 'top',
+  class = 'cell-border',
+  caption = htmltools::tags$caption(
+    style = 'caption-side: top; text-align: center; font-size: 20px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #333333;',
+    'Aantal leerlingen in Startpopulatie per ingelezen bestand'
+  )
+)
+```
+
+
+#### 1b. NRSP-bestanden - Startpopulatie
+
+De rapportage Startpopulatie (NRSP) toont de gegevens van leerlingen die aan het begin van het rapportagejaar staan ingeschreven in het Register Onderwijsdeelnemers (ROD) én die bij uitval voldoen aan de definitie van voortijdig schoolverlater. Het rapportagejaar start op 1 oktober van het huidige schooljaar en loopt tot 30 september van het volgende schooljaar. In februari/maart verschijnt de rapportage met voorlopige cijfers. In oktober/november plaatsen we de rapportage met definitieve cijfers.
+
+##### NRSP
+
+```{r}
+NRSP_totaal <- fs::fs_path(bestanden[grep("NRSP", bestanden)]) %>%
+  set_names(x = ., nm = .) |>
+  map_dfr(read_csv2, .id = "BESTANDSNAAM" ) |>
+  mutate(BESTANDSNAAM = str_sub(BESTANDSNAAM, start = -18, end = -1)) |>
+  rename (BURGERSERVICENUMMER = `#BURGERSERVICENUMMER`) |>
+  # Gelijk maken aan DPO tabellen
+  mutate(
+    DatumRapportage = case_when(
+      grepl("VI", BESTANDSNAAM) ~ ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) + 1, "-03-01")),
+      grepl("DI", BESTANDSNAAM) ~ ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) + 1, "-11-01"))
+    ),
+    Peildatum1Okt = ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-10-01")),
+    Peildatum30sep = ymd(paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-09-30")),
+    KoppelNummer = as.character(ifelse(BURGERSERVICENUMMER == 0, ONDERWIJSNUMMER, BURGERSERVICENUMMER)),
+    RapportageMaand = case_when(
+      grepl("VI", BESTANDSNAAM) ~ "16-NenR-V",
+      grepl("DI", BESTANDSNAAM) ~ "17-NenR-D"
+    ),
+    Teljaar = paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-", substr(BESTANDSNAAM, 5, 8)),
+    Volgnummer = NA,
+    Bestand = case_when(
+      grepl("VI", BESTANDSNAAM) ~ "NRSP-V",
+      grepl("DI", BESTANDSNAAM) ~ "NRSP-D"
+    ),
+    Duo_Gemeentecode = as.character(GEMCODE),
+    Duo_RMC_regio = as.character(RMC_REGIO),
+    RAPPORTAGE_MAAND = NA,
+    # Deze kolommen bevat het DPO bestand niet:
+    Geboortedatum = as.Date(as.character(GEBOORTEDATUM), format = "%Y%m%d"),
+    Postcode = as.character(POSTCODE_CIJFERS),
+    Woongemeente = NA,
+    Woonplaats = NA,
+    Niveau_num = as.integer(ifelse(regmatches(NIVEAU, gregexpr("[0-9]+", NIVEAU)) == 0, NA, regmatches(NIVEAU, gregexpr("[0-9]+", NIVEAU)))),
+    Indicatie_startkwalificatie = NA
+  ) |>
+  select(#Rapportage_Maand = RAPPORTAGE_MAAND,
+        Bestandsnaam = BESTANDSNAAM, RapportageMaand, DatumRapportage, Peildatum1Okt, Peildatum30sep, Crebocode = CREBO, KoppelNummer, RapportageMaand, Teljaar, Leerweg = ONDERWIJSSOORT,
+         Volgnummer,
+         Bestand, Duo_Gemeentecode, Duo_RMC_regio,
+         # Deze kolommen bevat het DPO bestand niet:
+         CreboOmschrijving = CREBO_OMSCHRIJVING, GemeenteNaam = GEMEENTENAAM, Geslacht = GESLACHT, Geboortedatum, Woongemeente, Woonplaats,
+         PostcodeCijfers = POSTCODE_CIJFERS, Postcode,
+         Niveau = NIVEAU, OnderwijsSoort = ONDERWIJSSOORT, Indicatie_startkwalificatie, Duo_RMC_regioNaam = RMC_REGIO_NAAM, BRIN,
+         OnderwijsAanbieder_Code = ONDERWIJSAANBIEDER_CODE, Sector = ONDERWIJSAANBIEDER_NAAM,
+         #OnderwijsAanbieder_Naam = ONDERWIJSAANBIEDER_NAAM,
+         OnderwijsLocatie_Code = ONDERWIJSLOCATIE_CODE, OnderwijsLocatie_Postcode = ONDERWIJSLOCATIE_POSTCODE,
+         Niveau_num
+  )  |>
+  suppressMessages()
+```
+
+
+Onderstaande een overzicht van de ingelezen NRSP-bestanden en het aantal regels per bestand:
+
+```{r}
+NRSP_tabel <- NRSP_totaal |>
+    filter(grepl("NRSP", Bestandsnaam)) |> 
+    group_by(Teljaar, Bestandsnaam) |> 
+    summarise(Aantal = n()) |>
+    arrange(Teljaar)
+```
+
+
+```{r}
+#| fig-width: 10
+#| out-width: "100%"
+
+# Tabel met vooraf gesorteerde data
+DT::datatable(
+  NRSP_tabel,
+  options = list(
+    pageLength = 21,
+    dom = 'ft',
+    ordering = TRUE,
+    autoWidth = TRUE,
+    search = list(regex = TRUE, caseInsensitive = TRUE),
+    initComplete = DT::JS(
+      "function(settings, json) {",
+      "  $(this.api().table().container()).css({'font-family': 'Arial, sans-serif'});",
+      "}"
+    ),
+    rowCallback = DT::JS(
+      "function(row, data, index) {",
+      "  if (index % 2 === 0) {",
+      "    $(row).css('background-color', 'white');",
+      "  } else {",
+      "    $(row).css('background-color', 'seashell');", 
+      "  }",
+      "}"
+    )
+  ),
+  rownames = TRUE,
+  filter = 'top',
+  class = 'cell-border',
+  caption = htmltools::tags$caption(
+    style = 'caption-side: top; text-align: center; font-size: 20px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #333333;',
+    'Aantal leerlingen in NRSP bestand per ingelezen bestand'
+  )
+)
+```
+
+
+
+#### 1c. Totaal bestand Starpopulatie maken
+
+Hier worden de A05 datasets en de NRSP dataset aan elkaar gekoppeld:
+
+```{r}
+A05_dpo_totaal <- bind_rows(A05_totaal,
+                            A05_dpo_13okt,
+                            A05_dpo_14nov,
+                            A05_dpo_15dec,
+                            NRSP_totaal)
+```
+
+### 2. Data (moglijke) VSV-ers inladen
+
+We laden hier de data in om te bepalen wie van de Startpopulatie dataset een mogelijke VSV-er is en wie uiteindelijk een VSV-er is geworden. Deze dataset wordt opgebouwd uit meerdere bestanden, namelijk de A04 bestanden (12x), A14 (3x) en de NenR data (1x voorlopige dataset en 1x definitieve dataset).
+
+#### 2a. A04- en A14-bestanden (mogelijke) VSV-ers
+
+De A-rapportages zijn tussenrapportages. De A04 en de A14 bestanden bevatten alle jongeren uit de startpopulatie die in de rapportagemaand geen relevante inschrijving meer hebben en mogelijk een VSV-er zouden kunnen zijn. De A04 wordt aangemaakt over de maanden oktober t/m september in het rapportagejaar. De A14 wordt aangemaakt over de maanden oktober t/m december na het rapportagejaar en bevat de mutaties die nog betrekking hebben op dit voorgaande rapportagejaar.
+
+##### A04
+
+```{r}
+A04_totaal <- fs::fs_path(bestanden[grep("A04", bestanden)]) %>%
+  set_names(x = ., nm = .) |>
+  map_dfr(read_csv2, .id = "BESTANDSNAAM",
+          col_types = "ccccccccccccccccccccccccccccccccccccccc") |>
+  mutate(BESTANDSNAAM = str_sub(BESTANDSNAAM, start = -18, end = -1)) |>
+  rename (
+    KoppelNummer = PERSOONSGEBONDENNUMMER)|>
+  mutate(
+    RapportageMaand = case_when(
+      substr(RAPPORTAGEMAAND, 5, 6) == "10" ~ "1-Oktober",
+      substr(RAPPORTAGEMAAND, 5, 6) == "11" ~ "2-November",
+      substr(RAPPORTAGEMAAND, 5, 6) == "12" ~ "3-December",
+      substr(RAPPORTAGEMAAND, 5, 6) == "01" ~ "4-Januari",
+      substr(RAPPORTAGEMAAND, 5, 6) == "02" ~ "5-Februari",
+      substr(RAPPORTAGEMAAND, 5, 6) == "03" ~ "6-Maart",
+      substr(RAPPORTAGEMAAND, 5, 6) == "04" ~ "7-April",
+      substr(RAPPORTAGEMAAND, 5, 6) == "05" ~ "8-Mei",
+      substr(RAPPORTAGEMAAND, 5, 6) == "06" ~ "9-Juni",
+      substr(RAPPORTAGEMAAND, 5, 6) == "07" ~ "10-Juli",
+      substr(RAPPORTAGEMAAND, 5, 6) == "08" ~ "11-Augustus",
+      substr(RAPPORTAGEMAAND, 5, 6) == "09" ~ "12-September"
+    ),
+    Teljaar = case_when(
+      as.integer(substr(RAPPORTAGEMAAND, nchar(RAPPORTAGEMAAND)-1, nchar(RAPPORTAGEMAAND))) %in% 10:12 ~
+        paste0(substr(RAPPORTAGEMAAND, 1, 4), "-", as.integer(substr(RAPPORTAGEMAAND, 1, 4)) + 1),
+      as.integer(substr(RAPPORTAGEMAAND, nchar(RAPPORTAGEMAAND)-1, nchar(RAPPORTAGEMAAND))) %in% 1:9 ~
+        paste0(as.integer(substr(RAPPORTAGEMAAND, 1, 4)) - 1, "-", substr(RAPPORTAGEMAAND, 1, 4))
+    ),
+    Duo_Reden_uitstroom = REDEN_UITSTROOM,
+    Duo_Reden = REDEN,
+    MeldingVerzuimloketWettelijk = ifelse(MELDING_VERZUIM_WETTELIJK == 'J', 1, 0),
+    MeldingVerzuimloketNietWettelijk = ifelse(MELDING_VERZUIM_NIET_WETTELIJK == 'J', 1, 0),
+
+    #Deze kolommen bevat het DPO bestand niet:
+    Bekostigd = NA
+  ) |>
+
+  select(BestandsnaamVSV = BESTANDSNAAM, RapportageMaand, KoppelNummer, Teljaar,
+         Duo_Reden_uitstroom, Duo_Reden, MeldingVerzuimloketWettelijk, MeldingVerzuimloketNietWettelijk,
+         #Deze kolommen bevat het DPO bestand niet:
+         Bekostigd
+  ) |>
+  suppressMessages()
+```
+
+
+Onderstaande een overzicht van de ingelezen A04-bestanden en het aantal regels per bestand:
+
+```{r}
+A04_tabel <- A04_totaal |>
+    filter(grepl("A04I24ZZ.csv", BestandsnaamVSV)) |> 
+    group_by(Teljaar, RapportageMaand, BestandsnaamVSV) |> 
+    summarise(Aantal = n()) |>
+    arrange(Teljaar, RapportageMaand)
+```
+
+
+
+```{r}
+#| fig-width: 10
+#| out-width: "100%"
+
+# Maak een hulpkolom om te sorteren op maandnummer
+A04_tabel_sorted <- A04_tabel |>
+  # Extraheer het maandnummer uit RapportageMaand
+  mutate(MaandNummer = as.numeric(sub("(\\d+)-.+", "\\1", RapportageMaand))) |>
+  # Sorteer op Teljaar, dan MaandNummer, dan Bestandsnaam
+  arrange(Teljaar, MaandNummer, BestandsnaamVSV) |>
+  # Verwijder de hulpkolom voor het tonen
+  select(-MaandNummer)
+
+# Tabel met vooraf gesorteerde data
+DT::datatable(
+  A04_tabel_sorted,
+  options = list(
+    pageLength = 21,
+    dom = 'ft',
+    ordering = TRUE,
+    autoWidth = TRUE,
+    search = list(regex = TRUE, caseInsensitive = TRUE),
+    initComplete = DT::JS(
+      "function(settings, json) {",
+      "  $(this.api().table().container()).css({'font-family': 'Arial, sans-serif'});",
+      "}"
+    ),
+    rowCallback = DT::JS(
+      "function(row, data, index) {",
+      "  if (index % 2 === 0) {",
+      "    $(row).css('background-color', 'white');",
+      "  } else {",
+      "    $(row).css('background-color', 'seashell');", 
+      "  }",
+      "}"
+    )
+  ),
+  rownames = TRUE,
+  filter = 'top',
+  class = 'cell-border',
+  caption = htmltools::tags$caption(
+    style = 'caption-side: top; text-align: center; font-size: 20px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #333333;',
+    'Aantal potientiële VSV-leerlingen per ingelezen bestand'
+  )
+)
+```
+
+
+##### A14
+
+```{r}
+A14_totaal <- fs::fs_path(bestanden[grep("A14", bestanden)]) %>%
+  set_names(x = ., nm = .) |>
+  map_dfr(read_csv2, .id = "BESTANDSNAAM",
+          col_types = "ccccccccccccccccccccccccccccccccccccccc") |>
+  mutate(BESTANDSNAAM = str_sub(BESTANDSNAAM, start = -18, end = -1)) |>
+  rename (
+    KoppelNummer = PERSOONSGEBONDENNUMMER
+    ) |>
+  mutate(
+    RapportageMaand = case_when(
+      substr(RAPPORTAGEMAAND, 5, 6) == "10" ~ "13-Oktober",
+      substr(RAPPORTAGEMAAND, 5, 6) == "11" ~ "14-November",
+      substr(RAPPORTAGEMAAND, 5, 6) == "12" ~ "15-December"
+    ),
+   Teljaar = paste0(as.integer(substr(RAPPORTAGEMAAND, 1, 4)) - 1,
+                     "-",
+                     substr(RAPPORTAGEMAAND, 1, 4)),
+    Duo_Reden_uitstroom = REDEN_UITSTROOM,
+    Duo_Reden = REDEN,
+    MeldingVerzuimloketWettelijk = ifelse(MELDING_VERZUIM_WETTELIJK == 'J', 1, 0),
+    MeldingVerzuimloketNietWettelijk = ifelse(MELDING_VERZUIM_NIET_WETTELIJK == 'J', 1, 0),
+
+    #Deze kolommen bevat het DPO bestand niet:
+    Bekostigd = NA
+  ) |>
+
+  select(BestandsnaamVSV = BESTANDSNAAM, RapportageMaand, KoppelNummer, Teljaar,
+         Duo_Reden_uitstroom, Duo_Reden, MeldingVerzuimloketWettelijk, MeldingVerzuimloketNietWettelijk,
+         #Deze kolommen bevat het DPO bestand niet:
+         Bekostigd
+  ) |>
+  suppressMessages()
+
+```
+
+
+Onderstaande een overzicht van de ingelezen A14-bestanden en het aantal regels per bestand:
+
+```{r}
+A14_tabel <- A14_totaal |>
+    filter(grepl("A14I24ZZ.csv", BestandsnaamVSV)) |> 
+    group_by(Teljaar, RapportageMaand, BestandsnaamVSV) |> 
+    summarise(Aantal = n()) |>
+    arrange(Teljaar, RapportageMaand)
+```
+
+
+
+```{r}
+#| fig-width: 10
+#| out-width: "100%"
+
+# Maak een hulpkolom om te sorteren op maandnummer
+A14_tabel_sorted <- A14_tabel |>
+  # Extraheer het maandnummer uit RapportageMaand
+  mutate(MaandNummer = as.numeric(sub("(\\d+)-.+", "\\1", RapportageMaand))) |>
+  # Sorteer op Teljaar, dan MaandNummer, dan Bestandsnaam
+  arrange(Teljaar, MaandNummer, BestandsnaamVSV) |>
+  # Verwijder de hulpkolom voor het tonen
+  select(-MaandNummer)
+
+# Tabel met vooraf gesorteerde data
+DT::datatable(
+  A04_tabel_sorted,
+  options = list(
+    pageLength = 21,
+    dom = 'ft',
+    ordering = TRUE,
+    autoWidth = TRUE,
+    search = list(regex = TRUE, caseInsensitive = TRUE),
+    initComplete = DT::JS(
+      "function(settings, json) {",
+      "  $(this.api().table().container()).css({'font-family': 'Arial, sans-serif'});",
+      "}"
+    ),
+    rowCallback = DT::JS(
+      "function(row, data, index) {",
+      "  if (index % 2 === 0) {",
+      "    $(row).css('background-color', 'white');",
+      "  } else {",
+      "    $(row).css('background-color', 'seashell');", 
+      "  }",
+      "}"
+    )
+  ),
+  rownames = TRUE,
+  filter = 'top',
+  class = 'cell-border',
+  caption = htmltools::tags$caption(
+    style = 'caption-side: top; text-align: center; font-size: 20px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #333333;',
+    'Aantal potientiële VSV-leerlingen per ingelezen bestand'
+  )
+)
+```
+
+
+#### 2b. NenR-bestanden VSV-ers
+
+Met de rapportage Namen en rugnummers (NenR) kan gecontroleerd worden wie voortijdig schoolverlaters zijn de instelling. In februari/maart verschijnt de rapportage op basis van de voorlopige cijfers. In oktober/november plaatsen we de rapportage op basis van de definitieve cijfers.
+
+##### NenR
+
+```{r}
+NenR_totaal <-fs::fs_path(bestanden[grep("NenR", bestanden)]) %>%
+  set_names(x = ., nm = .) |>
+  map_dfr(read_csv2, .id = "BESTANDSNAAM",
+          col_types = "ccccccccccccccccccccccccccccc") |>
+  mutate(BESTANDSNAAM = str_sub(BESTANDSNAAM, start = -18, end = -1)) |>
+  rename (BURGERSERVICENUMMER = `#BURGERSERVICENUMMER`) |>
+  # Gelijk maken aan DPO tabellen
+  mutate(
+    KoppelNummer = ifelse(BURGERSERVICENUMMER == 0, ONDERWIJSNUMMER, BURGERSERVICENUMMER),
+    RapportageMaand = case_when(
+      grepl("VI", BESTANDSNAAM) ~ "16-NenR-V",
+      grepl("DI", BESTANDSNAAM) ~ "17-NenR-D"
+    ),
+    Teljaar = paste0(as.integer(substr(BESTANDSNAAM, 5, 8)) - 1, "-", substr(BESTANDSNAAM, 5, 8)),
+    Duo_Reden_uitstroom = NA,
+    Duo_Reden = NA,
+    MeldingVerzuimloketWettelijk = NA,
+    MeldingVerzuimloketNietWettelijk = NA,
+    #Deze kolommen bevat het DPO bestand niet:
+    Bekostigd = ifelse(EXAMEN == 'J' & is.na(IND_BEKOSTIGING), 0,
+                       ifelse(IND_BEKOSTIGING == 'J' & is.na(EXAMEN), 1, 999))
+  ) |>
+  select(BestandsnaamVSV = BESTANDSNAAM,RapportageMaand, KoppelNummer, Teljaar,
+         Duo_Reden_uitstroom, Duo_Reden, MeldingVerzuimloketWettelijk, MeldingVerzuimloketNietWettelijk,
+         #Deze kolommen bevat het DPO bestand niet:
+         Bekostigd
+  )  |>
+  suppressMessages()
+```
+
+
+Onderstaande een overzicht van de ingelezen NenR-bestanden en het aantal regels per bestand:
+
+```{r}
+NenR_tabel <- NenR_totaal |>
+    filter(grepl("NenR", BestandsnaamVSV)) |> 
+    group_by(Teljaar, BestandsnaamVSV) |> 
+    summarise(Aantal = n()) |>
+    arrange(Teljaar)
+```
+
+
+```{r}
+#| fig-width: 10
+#| out-width: "100%"
+
+# Tabel met vooraf gesorteerde data
+DT::datatable(
+  NenR_tabel,
+  options = list(
+    pageLength = 21,
+    dom = 'ft',
+    ordering = TRUE,
+    autoWidth = TRUE,
+    search = list(regex = TRUE, caseInsensitive = TRUE),
+    initComplete = DT::JS(
+      "function(settings, json) {",
+      "  $(this.api().table().container()).css({'font-family': 'Arial, sans-serif'});",
+      "}"
+    ),
+    rowCallback = DT::JS(
+      "function(row, data, index) {",
+      "  if (index % 2 === 0) {",
+      "    $(row).css('background-color', 'white');",
+      "  } else {",
+      "    $(row).css('background-color', 'seashell');", 
+      "  }",
+      "}"
+    )
+  ),
+  rownames = TRUE,
+  filter = 'top',
+  class = 'cell-border',
+  caption = htmltools::tags$caption(
+    style = 'caption-side: top; text-align: center; font-size: 20px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #333333;',
+    'Aantal leerlingen in NenR bestand per ingelezen bestand'
+  )
+)
+```
+
+
+#### 2c. Totaal bestand VSV-populatie maken
+
+Hier worden de A04, A14 datasets en de NenR dataset aan elkaar gekoppeld:
+
+```{r}
+VSV <- bind_rows(A04_totaal,
+                 A14_totaal,
+                 NenR_totaal) |>
+  mutate(VSV = 1,
+         VSV_ID = paste0(Teljaar, RapportageMaand, KoppelNummer))
+```
+
+### 3. Data VSV streefwaarden (normen) inladen
+
+De streefpercentages zijn berekend door DUO en OCW op landelijk niveau met als doelstelling max. 20.000 nieuwe vsv'ers in 2024.
+
+Hier worden de VSV streefwaarden ingeladen:
+
+```{r}
+VSVnormen <- read_csv2(here::here("data","reference","VSV_normen.csv"),
+                       na = "NULL") |>
+  mutate(NormDUOVSV = NormDUOVSV/1000) |>
+  suppressMessages()
+```
+
+#### 3a. Normen koppplen aan totaal bestand A05
+
+Hier worden de databestand aan elkaar gekoppeld:
+
+```{r}
+Starterset <- A05_dpo_totaal |>
+  left_join(VSVnormen,
+            by = join_by(Niveau_num == Niveau, Teljaar == Teljaar)) |>
+  mutate(VSV_ID = paste0(Teljaar, RapportageMaand, KoppelNummer))
+```
+
+### 4. Totaalbestand maken
+
+```{r}
+VSV_totaal <- Starterset |>
+  left_join(VSV,
+            by = join_by(VSV_ID == VSV_ID,
+                         Teljaar == Teljaar,
+                         RapportageMaand == RapportageMaand,
+                         KoppelNummer == KoppelNummer)) |>
+  mutate(VSV = ifelse(is.na(VSV), 0, VSV))
+
+```
+
+### 5. Wegschrijven naar een andere map
+
+```{r}
+write.csv(VSV_totaal, "C:/Users/s.kalkers/OneDrive - Graafschap College/Documenten/__Shirley/CEDA/Data_export_tbv_PowerBI/VSV_totaal.csv") |>
+  suppressMessages()
+```
+
+## Eerste visualisaties en analyses
+
+### 1. Variabelen en opmaak elememten aanmaken
+
+Hieronder worden waardes aangemaakt, die verderop worden gebruikt voor het maken van de visuals. De invulling van de waardes kun je aanpassen.
+
+```{r}
+Kleur_achtergrond <- "seashell"
+Kleur_rand <- "seashell4"
+Keuzemaand <- "12-September"  #"17-NenR-D"
+Keuzejaar <- "2022-2023" 
+```
+
+### 2. Titel visualisatie aanmaken
+
+```{r}
+mijn_titel <- paste("Aantal VSV-ers", Keuzejaar, "in rapportagemaand", Keuzemaand)
+```
+
+### `r mijn_titel`
+
+De kleur van de achtergrond: `r Kleur_achtergrond`
+
+
+
+### 3. KPI's visualisatie aanmaken
+
+
+```{r Berekeningen} 
+`Aantal DUO VSV Startset` <- VSV_totaal |> 
+  filter(RapportageMaand == Keuzemaand,
+         Teljaar == Keuzejaar) |>
+  nrow() 
+
+
+`Aantal VSV` <- VSV_totaal |>
+  filter(RapportageMaand == Keuzemaand,
+         Teljaar == Keuzejaar,
+         VSV == 1) |>
+  nrow()
+
+
+`Percentage VSV` <- scales::percent(`Aantal VSV` / `Aantal DUO VSV Startset`, accuracy = 0.1)
+```
+
+```{r KPIs}
+Plot_waarde <- function(Keuze_variabele, Keuze_tekst){
+  ggplot() +
+  annotate("text", label = Keuze_variabele, x = 0, y = 0.1, size = 20) +
+  annotate("text", label = Keuze_tekst, x = 0, y = 0.02, size = 5) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = Kleur_achtergrond, 
+                                       colour = Kleur_rand)) +
+  ylim(c(0,0.2))
+}
+
+
+Plot_aantal_starterset <- Plot_waarde(`Aantal DUO VSV Startset`, "Aantal DUO VSV Startset") 
+
+Plot_aantal_VSV <- Plot_waarde(`Aantal VSV`, "Aantal VSV") 
+
+Plot_percentage_VSV <- Plot_waarde(`Percentage VSV`, "Percentage VSV") 
+```
+
+
+
+
+```{r}
+#| fig-width: 12
+#| fig-height: 4
+#| out-width: "100%"
+#| fig-format: "png"   # Specificeert het formaat als PNG
+#| fig-align: "center"
+#| echo: false         # Verbergt de code in de output
+
+# Definieer de kleuren als die nog niet bestaan
+if(!exists("Kleur_achtergrond")) Kleur_achtergrond <- "#f0f0f0"
+if(!exists("Kleur_rand")) Kleur_rand <- "#cccccc"
+
+# Plot functie
+Plot_waarde <- function(Keuze_variabele, Keuze_tekst){
+  ggplot() +
+  annotate("text", label = Keuze_variabele, x = 0, y = 0.1, size = 20) +
+  annotate("text", label = Keuze_tekst, x = 0, y = 0.02, size = 5) +
+  theme_void() +
+  theme(plot.background = element_rect(fill = Kleur_achtergrond, 
+                                       colour = Kleur_rand)) +
+  ylim(c(0,0.2))
+}
+
+# Creëer de plots
+Plot_aantal_starterset <- Plot_waarde("7.483", "Aantal DUO VSV Startset") 
+Plot_aantal_VSV <- Plot_waarde("452", "Aantal VSV") 
+Plot_percentage_VSV <- Plot_waarde("6,0%", "Percentage VSV") 
+
+# Combineer plots naast elkaar
+
+Plot_aantal_starterset + Plot_aantal_VSV + Plot_percentage_VSV
+```

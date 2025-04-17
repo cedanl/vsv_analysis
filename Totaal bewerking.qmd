@@ -200,7 +200,6 @@ VSVperc_per_Teljaar_Leerweg_Keuzemaand <- VSV_totaal |>
     mutate(Deel_VSV = Aantal_VSV / Aantal,
          Percentage_VSV = scales::percent(Aantal_VSV / Aantal, accuracy = 0.1)
          )
-
 ```
 
 
