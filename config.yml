@@ -4,12 +4,6 @@ default:
   data_base_dir: "data/synthetic"
   data_results_dir: "results/synthetic"
 
-graafschap:
-  name: "Graafschap College"
-  data_base_dir: "C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV"
-  data_results_dir: "C:/Users/s.kalkers/OneDrive - Graafschap College/Documenten/__Shirley/CEDA"
-
-
 ...:
   name: "..."
   data_base_dir: "..."
