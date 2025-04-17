@@ -37,7 +37,7 @@ packages_cran <- c(
     "pkgload",      # Load and test packages
     "here",           # Set up file paths, is this necessary with this.path
     "this.path",
-    "cli",            # Create command line interfaces
+    #"cli",            # Create command line interfaces
 
     # rendering
     "quarto",
@@ -129,7 +129,6 @@ tryCatch({
     renv::restore(confirm = FALSE)
 })
 
-
 Sys.setenv(R_CONFIG_ACTIVE = "dev")
 
 ## Install packages not inside project (renv) but for user
@@ -137,22 +136,22 @@ if (config::get("developer_mode") == TRUE) {
     dev_packages <- c("devtools",
                       "usethis",
                       "roxygen2")
+
     .libPaths(c(user_lib, .libPaths()))
-    for (package in dev_packages) {
-        if (!requireNamespace(package, quietly = TRUE)) {
-            install.packages(package)
+
+    for (pkg in dev_packages) {
+        if (!(pkg %in% rownames(installed.packages()))) {
+            install.packages(pkg)
         }
     }
-    .libPaths(old_lib_paths)
+    # Use renv location first but also make user_lib available
+    .libPaths(c(old_lib_paths, user_lib))
 }
-
 
 # Remove since no longer necessary, items were made in .Rprofile and 00_setup.R
 rm(old_lib_paths, user_lib)
 
 
-
-# Load packages
 # TODO Set to TRUE when adding packages to check if there are problematic conflicts
 suppressMessages(purrr::walk(packages, ~library(.x,
                                                 character.only = TRUE)))
