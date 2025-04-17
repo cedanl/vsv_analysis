@@ -10,7 +10,7 @@ Sys.setenv(
 
     # Performance
     RENV_CONFIG_PAK_ENABLED = TRUE, # Pak gives error with solving dependencies, so disabled
-    #RENV_CONFIG_INSTALL_JOBS = 4, # Pak does parallelization by default, so not needed
+    RENV_CONFIG_INSTALL_JOBS = 4, # Pak does parallelization by default, so not needed
 
     # Specfic settings, renv is within setup scripts checked and synchronized if needed
     RENV_CONFIG_SYNCHRONIZED_CHECK = FALSE,
@@ -22,6 +22,9 @@ Sys.setenv(
 # More renv options
 options(pkg.install.staged.warn = FALSE)
 options(pkgType = "binary")
+options(renv.config.install.binary = TRUE)
+
+user_lib <- .libPaths()
 
 source("utils/renv/activate.R")
 
