@@ -265,3 +265,41 @@ install_rtools <- function() {
 
     ask_restart_rstudio()
 }
+
+# Function to quickly check if packages are installed at correct versions
+# Function to check if packages are installed at correct versions
+are_packages_up_to_date <- function(packages) {
+    library_paths <- .libPaths()
+    project_lib <- renv::paths$library()
+
+    # Get the lockfile
+    lockfile <- renv::lockfile_read()
+
+    # Check if any packages need updating
+    all_up_to_date <- TRUE
+
+    for (pkg in packages) {
+        # Skip if package isn't in lockfile
+        if (!pkg %in% names(lockfile$Packages)) {
+            next
+        }
+
+        # Check if installed
+        is_installed <- requireNamespace(pkg, quietly = TRUE)
+        if (!is_installed) {
+            all_up_to_date <- FALSE
+            break
+        }
+
+        # Check version
+        expected_version <- lockfile$Packages[[pkg]]$Version
+        installed_version <- as.character(packageVersion(pkg))
+
+        if (expected_version != installed_version) {
+            all_up_to_date <- FALSE
+            break
+        }
+    }
+
+    return(all_up_to_date)
+}

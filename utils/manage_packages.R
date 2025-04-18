@@ -34,6 +34,7 @@ packages_cran <- c(
     #"devtools",
     #"usethis",
     #"roxygen2",
+    "pak",          # Install R packages fast
     "pkgload",      # Load and test packages
     "here",           # Set up file paths, is this necessary with this.path
     "this.path",
@@ -119,43 +120,21 @@ options(renv.snapshot.filter = function(project) {
 # renv::snapshot(type = "custom")
 
 
-## Set only user_lib to library path
-assign(".lib.loc", user_lib, envir = environment(.libPaths))
-
-if (!("pak" %in% rownames(installed.packages()))) {
-    # Install pak in user library
-    install.packages("pak")
-}
-
 # Probeer met pak, fallback naar standaard renv restore
 tryCatch({
     # TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
-    renv::restore(confirm = FALSE)
+    if (are_packages_up_to_date(packages_renv) == TRUE) {
+        message("✅ All packages already at correct versions. No need to restore.")
+    } else {
+        # Only run restore if needed
+        renv::restore(confirm = FALSE)
+    }
 }, error = function(e) {
     message("Installation error, fallback to more simple installation.")
+    renv::clean()
     options(renv.config.pak.enabled = FALSE)
     renv::restore(confirm = FALSE)
 })
-
-
-## Install packages not inside project (renv) but for user
-if (config::get("developer_mode") == TRUE) {
-    dev_packages <- c("devtools",
-                      "usethis",
-                      "roxygen2")
-
-    for (pkg in dev_packages) {
-        if (!(pkg %in% rownames(installed.packages()))) {
-            install.packages(pkg)
-        }
-    }
-}
-
-# Use renv location first but also make user_lib available
-.libPaths(c(renv_lib_paths, user_lib))
-
-# Remove since no longer necessary, items were made in .Rprofile and 00_setup.R
-rm(renv_lib_paths, user_lib)
 
 # TODO Set to TRUE when adding packages to check if there are problematic conflicts
 suppressMessages(purrr::walk(packages, ~library(.x,
