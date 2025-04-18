@@ -28,6 +28,9 @@ user_lib <- .libPaths()
 
 source("utils/renv/activate.R")
 
+renv_lib_paths <- .libPaths()
+.libPaths(c(renv_lib_paths, user_lib))
+
 # Trigger load
 if (interactive() && file.exists("00_setup.R")) {
     # prompt of readline doesn't work from Rrofile

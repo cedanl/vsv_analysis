@@ -118,6 +118,15 @@ options(renv.snapshot.filter = function(project) {
 # TODO Un-edit when adding packages above to include them in snapshot
 # renv::snapshot(type = "custom")
 
+
+## Set only user_lib to library path
+assign(".lib.loc", user_lib, envir = environment(.libPaths))
+
+if (!("pak" %in% rownames(installed.packages()))) {
+    # Install pak in user library
+    install.packages("pak")
+}
+
 # Probeer met pak, fallback naar standaard renv restore
 tryCatch({
     # TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
@@ -128,7 +137,6 @@ tryCatch({
     renv::restore(confirm = FALSE)
 })
 
-Sys.setenv(R_CONFIG_ACTIVE = "dev")
 
 ## Install packages not inside project (renv) but for user
 if (config::get("developer_mode") == TRUE) {
@@ -136,21 +144,18 @@ if (config::get("developer_mode") == TRUE) {
                       "usethis",
                       "roxygen2")
 
-    ## Set only user_lib to library path
-    assign(".lib.loc", user_lib, envir = environment(.libPaths))
-
     for (pkg in dev_packages) {
         if (!(pkg %in% rownames(installed.packages()))) {
             install.packages(pkg)
         }
     }
-    # Use renv location first but also make user_lib available
-    .libPaths(c(renv_lib_paths, user_lib))
 }
+
+# Use renv location first but also make user_lib available
+.libPaths(c(renv_lib_paths, user_lib))
 
 # Remove since no longer necessary, items were made in .Rprofile and 00_setup.R
 rm(renv_lib_paths, user_lib)
-
 
 # TODO Set to TRUE when adding packages to check if there are problematic conflicts
 suppressMessages(purrr::walk(packages, ~library(.x,
