@@ -5,18 +5,18 @@
 
 source("utils/dev_functions.R")
 
-renv_lib_paths <- .libPaths()
+platform <- get_platform()
 
-# Set only user_lib to library path
-assign(".lib.loc", user_lib, envir = environment(.libPaths))
-
-print(.libPaths())
-# pak is needed for renv, otherwise install it
-if (!("pak" %in% rownames(installed.packages(lib.loc = user_lib)))) {
-    install.packages("pak", lib = .libPaths())
+if (platform == "macOS") {
+    source("utils/install_mac_os_system_deps.R")
 }
-.libPaths(renv_lib_paths)
+
+if (platform == "windows") {
+    source("utils/install_windows_system_deps.R")
+}
 
 source("utils/manage_packages.R")
+
+clear_script_objects(filepath = "utils/dev_functions.R")
 
 load_all()
