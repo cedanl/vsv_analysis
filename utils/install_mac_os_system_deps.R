@@ -1,6 +1,7 @@
 # Step 1: Install Homebrew (if not present)
 install_homebrew()
 
+# TODO: splitting of packages in cask (only quartz) and regular
 # Step 2: Define required brew packages (ggplot2, graphics)
 brew_deps <- c(
     # downloads / ssh / network stuff
@@ -13,7 +14,7 @@ brew_deps <- c(
     # compile packages
     "pkg-config",
     # unicode
-    "icu4c",
+    # "icu4c",
     # plots
     "xquartz", # cask, must be via terminal
     "cairo",
