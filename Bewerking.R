@@ -2,7 +2,7 @@
 library(tidyverse)
 
 # VSV normen inlezen -----------------------------------------------------------
-VSVnormen <- read_csv2(here::here("data","VSV_normen.csv"),
+VSVnormen <- read_csv2(here::here("data","reference","VSV_normen.csv"),
                        na = "NULL") |>
   mutate(NormDUOVSV = NormDUOVSV/1000) |>
   suppressMessages()
@@ -13,13 +13,10 @@ VSVnormen <- read_csv2(here::here("data","VSV_normen.csv"),
 # Starterset bestand maken -----------------------------------------------------
 
 
+bestanden <- c(list.files(config::get("data_base_dir"), recursive = TRUE, full.names=TRUE))
+
 # Starterset
 # NRSP bestand inlezen met bestandsnaam als kolom BESTANDSNAAM
-bestanden <- c(list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2022", full.names=TRUE ),
-               list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2023", full.names=TRUE ),
-               list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2024", full.names=TRUE ),
-               list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2025", full.names=TRUE ))
-
 
 NRSP_totaal <- fs::fs_path(bestanden[grep("NRSP", bestanden)]) %>%
   set_names(x = ., nm = .) |>
@@ -184,10 +181,6 @@ Starterset <- A05_dpo_totaal |>
 
 # VSV
 # NRSP bestand inlezen met bestandsnaam als kolom BESTANDSNAAM
-bestanden <- c(list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2022", full.names=TRUE ),
-               list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2023", full.names=TRUE ),
-               list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2024", full.names=TRUE ),
-               list.files( path="C:/Users/s.kalkers/Graafschap College/M-Magister beheer - VSV/2025", full.names=TRUE ))
 
 
 NenR_totaal <-fs::fs_path(bestanden[grep("NenR", bestanden)]) %>%
@@ -334,6 +327,14 @@ VSV_totaal <- Starterset |>
   mutate(VSV = ifelse(is.na(VSV), 0, VSV))
 
 
-# Wegschrijven naar een andere map
-write.csv(VSV_totaal, "C:/Users/s.kalkers/OneDrive - Graafschap College/Documenten/__Shirley/CEDA/Data_export_tbv_PowerBI/VSV_totaal.csv") |>
-  suppressMessages()
+
+# Haal de lijst van bestanden op uit de opgegeven directory
+Totale_dataset <- list.files(config::get("data_results_dir"), recursive = TRUE, full.names = TRUE)
+
+# Definieer het pad voor het eindbestand
+output_file <- file.path(config::get("data_results_dir"), "VSV_totaal.csv")
+
+# Schrijf de gesorteerde data naar het eindbestand
+write.csv(VSV_totaal, output_file, row.names = FALSE) |>
+    suppressMessages()
+
