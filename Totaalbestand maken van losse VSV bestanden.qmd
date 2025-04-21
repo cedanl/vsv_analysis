@@ -573,7 +573,7 @@ Hieronder worden waardes aangemaakt, die verderop worden gebruikt voor het maken
 ```{r}
 Kleur_achtergrond <- "seashell"
 Kleur_rand <- "seashell4"
-Keuzemaand <- "12-September"  #"17-NenR-D"
+Keuzemaand <-  "12-September" #"17-NenR-D" 
 Keuzejaar <- "2022-2023" 
 ```
 
@@ -610,7 +610,7 @@ mijn_titel <- paste("Aantal VSV-ers", Keuzejaar, "in rapportagemaand", Keuzemaan
 ```{r KPIs}
 Plot_waarde <- function(Keuze_variabele, Keuze_tekst){
   ggplot() +
-  annotate("text", label = Keuze_variabele, x = 0, y = 0.1, size = 20) +
+  annotate("text", label = Keuze_variabele, x = 0, y = 0.1, size = 15) +
   annotate("text", label = Keuze_tekst, x = 0, y = 0.02, size = 5) +
   theme_void() +
   theme(plot.background = element_rect(fill = Kleur_achtergrond, 
@@ -619,46 +619,150 @@ Plot_waarde <- function(Keuze_variabele, Keuze_tekst){
 }
 
 
+# Creëer de plots
 Plot_aantal_starterset <- Plot_waarde(`Aantal DUO VSV Startset`, "Aantal DUO VSV Startset") 
-
 Plot_aantal_VSV <- Plot_waarde(`Aantal VSV`, "Aantal VSV") 
-
 Plot_percentage_VSV <- Plot_waarde(`Percentage VSV`, "Percentage VSV") 
+
+# Combineer plots naast elkaar
+#Plot_aantal_starterset + plot_spacer() + Plot_aantal_VSV + plot_spacer() + Plot_percentage_VSV
+
+# Combineer plots naast elkaar met witruimte ertussen
+combined_plot <- Plot_aantal_starterset + plot_spacer() + Plot_aantal_VSV + plot_spacer() + Plot_percentage_VSV +
+  plot_layout(ncol = 6, widths = c(1, 0.1, 1, 0.1, 1))
+
+# Toon de gecombineerde plot
+combined_plot
 ```
 
-### <h1 style="color: #8B4500; font-family: &#39;AvantGarde&#39;, sans-serif, monospace;">`r mijn_titel`</h1>
 
+### 4. Grafiek visualisaties aanmaken
+
+```{r}
+# Bereken het gemiddelde percentage per teljaar en sector
+
+VSVperc_per_Teljaar_Sector_Keuzemaand <- VSV_totaal |> 
+  filter(RapportageMaand == Keuzemaand) |>
+    group_by(Teljaar, Sector, RapportageMaand) |>
+    summarise(Aantal_VSV = sum(VSV),
+              Aantal = n()) |>
+  ungroup() |>
+    mutate(Deel_VSV = Aantal_VSV / Aantal,
+         Percentage_VSV = scales::percent(Aantal_VSV / Aantal, accuracy = 0.1)
+         )
+
+
+Plot_sector_percentageVSV <- plot_titel_percentageVSV(data = VSVperc_per_Teljaar_Sector_Keuzemaand)
+
+
+Plot_sector_percentageVSV
+```
+
+```{r}
+# Bereken het gemiddelde percentage per teljaar en niveau
+VSVperc_per_Teljaar_Niveau_Keuzemaand <- VSV_totaal |> 
+  filter(RapportageMaand == Keuzemaand) |>
+    group_by(Teljaar, Niveau_num, Niveau, RapportageMaand) |>
+    summarise(Aantal_VSV = sum(VSV),
+              Aantal = n()) |>
+  ungroup() |>
+    mutate(Deel_VSV = Aantal_VSV / Aantal,
+         Percentage_VSV = scales::percent(Aantal_VSV / Aantal, accuracy = 0.1)
+         )
+
+Plot_niveau_percentageVSV <- plot_titel_percentageVSV(data = VSVperc_per_Teljaar_Niveau_Keuzemaand,
+                         x_var = "Niveau_num",     
+                         y_var = "Deel_VSV",
+                         group_var = "Teljaar",
+                         titel = "Niveau")
+
+
+Plot_niveau_percentageVSV
+```
+
+
+```{r}
+# Bereken het gemiddelde percentage per teljaar en niveau
+
+VSVperc_per_Teljaar_Leerweg_Keuzemaand <- VSV_totaal |> 
+  filter(RapportageMaand == Keuzemaand) |>
+    group_by(Teljaar, Leerweg, RapportageMaand) |>
+    summarise(Aantal_VSV = sum(VSV),
+              Aantal = n()) |>
+  ungroup() |>
+    mutate(Deel_VSV = Aantal_VSV / Aantal,
+         Percentage_VSV = scales::percent(Aantal_VSV / Aantal, accuracy = 0.1)
+         )
+
+Plot_leerweg_percentageVSV <- plot_titel_percentageVSV(data = VSVperc_per_Teljaar_Leerweg_Keuzemaand,
+                         x_var = "Leerweg",     
+                         y_var = "Deel_VSV",
+                         group_var = "Teljaar",
+                         titel = "Leerweg")
+
+
+Plot_leerweg_percentageVSV
+```
+
+
+
+
+
+
+## 5. Dashboard
+
+<h1 style="color: #8B4500; font-family: &#39;AvantGarde&#39;, sans-serif, monospace;">
+
+`r mijn_titel`
+
+</h1>
 
 
 ```{r}
 #| fig-width: 12
-#| fig-height: 4
-#| out-width: "100%"
-#| fig-format: "png"   # Specificeert het formaat als PNG
-#| fig-align: "center"
-#| echo: false         # Verbergt de code in de output
+#| fig-height: 8
 
-# Definieer de kleuren als die nog niet bestaan
-if(!exists("Kleur_achtergrond")) Kleur_achtergrond <- "#f0f0f0"
-if(!exists("Kleur_rand")) Kleur_rand <- "#cccccc"
+layout <- "
+AABBCC
+AABBCC
+######
+DDDDDD
+DDDDDD
+######
+EEEFFF
+EEEFFF
+"
 
-# Plot functie
-Plot_waarde <- function(Keuze_variabele, Keuze_tekst){
-  ggplot() +
-  annotate("text", label = Keuze_variabele, x = 0, y = 0.1, size = 20) +
-  annotate("text", label = Keuze_tekst, x = 0, y = 0.02, size = 5) +
-  theme_void() +
-  theme(plot.background = element_rect(fill = Kleur_achtergrond, 
-                                       colour = Kleur_rand)) +
-  ylim(c(0,0.2))
-}
+Overzichtsdashboard1 <- Plot_aantal_starterset + Plot_aantal_VSV + Plot_percentage_VSV +
+  Plot_sector_percentageVSV + 
+  Plot_niveau_percentageVSV + Plot_leerweg_percentageVSV +
+  plot_layout(design = layout,
+              heights = c(1, 1, 0.2, 1, 1, 0.2, 1, 1),
+              guides = "collect") &
+  theme(plot.margin = margin(5, 5, 5, 5))
 
-# Creëer de plots
-Plot_aantal_starterset <- Plot_waarde("7.483", "Aantal DUO VSV Startset") 
-Plot_aantal_VSV <- Plot_waarde("452", "Aantal VSV") 
-Plot_percentage_VSV <- Plot_waarde("6,0%", "Percentage VSV") 
 
-# Combineer plots naast elkaar
+#Overzichtsdashboard1
+```
 
-Plot_aantal_starterset + Plot_aantal_VSV + Plot_percentage_VSV
+
+
+```{r Overzichtsdashboard}
+#| fig-width: 10
+#| fig-height: 12
+Plot_bovenste_regel <- Plot_aantal_starterset + plot_spacer() + Plot_aantal_VSV + plot_spacer() + Plot_percentage_VSV +
+  plot_layout(widths = c(10, 0.5, 10, 0.5, 10)) 
+
+Plot_onderste_regel <- Plot_niveau_percentageVSV + plot_spacer() + Plot_leerweg_percentageVSV +
+  plot_layout(widths = c(10, 0.5, 10))
+
+Overzichtsdashboard2 <- (Plot_bovenste_regel / 
+                            plot_spacer() / 
+                            Plot_sector_percentageVSV / 
+                            plot_spacer() / 
+                            Plot_onderste_regel) + plot_layout(heights = c(1, 0.1, 1.5, 0.1, 1)) &
+    theme(plot.margin = margin(10, 10, 10, 10))
+
+
+Overzichtsdashboard2
 ```
