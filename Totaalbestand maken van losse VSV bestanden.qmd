@@ -27,25 +27,27 @@ execute:
 
 # Load required libraries
 source("00_setup.R")
-
+source("helpers.R")
 ```
 
 ## Vooraf
 
-In dit project worden DUO data m.b.t. voortijdig schoolverlaters (VSV) opgehaald, bewerkt en gekoppeld, zodat er een analysebestand onstaat. Vervolgens wordt een eerste aanzet gedaan om de data te valideren en te visualiseren. Het is mogelijk gebruik te maken van synthetische data (gesimuleerde data) en/of data van de instelling / school. 
+In dit project worden DUO data m.b.t. voortijdig schoolverlaters (VSV) opgehaald, bewerkt en gekoppeld, zodat er een analysebestand onstaat. Vervolgens wordt een eerste aanzet gedaan om de data te valideren en te visualiseren. Het is mogelijk gebruik te maken van synthetische data (gesimuleerde data) of data van de instelling / school.
 
-##### Instelling toevoegen
-Om deze keuze te maken zal eerste het volgende bestand aangepast moeten worden. config.yml.
+##### Instellen gebruik syntehtische data of instellings- / schooldata
 
-Dummy data: dan hoef je niets aan te passen in het bestand, maar dan moet je onderstaande wel de keuze maken om .... te activeren (haal het # voor de regel weg en zet een # voor de volgende regel).
-Instellings data: open de yml, voeg instelling toe en sla op ....
+Voor het gebruik van de synthetische data, hoeft niets aangepast te worden in het config.yml betand. Verderop zal nog wel de keuze gemaakt moeten worden of gebruik gemaakt wordt van de instellings- / schooldata.
+
+Om de instellings- / schooldata te gebruiken, zal eerst het volgende bestand aangepast moeten worden: config.yml. Hoe dat in zijn werk gaat, staat hieronder beschreven.
+
+##### Config.yml bestand bekijken
 
 Dit staat nu in de config.yml:
+
 ```{r}
 #| echo: false
 cat(readLines(here::here("config.yml")), sep = "\n")
 ```
-
 
 ```{r}
 #| echo: false
@@ -54,43 +56,44 @@ source(here::here("helpers.R"))
 cat("Om het config.yml bestand te openen, voer `open_config()` uit in de Console.")
 ```
 
+##### Config.yml bestand aanpassen
 
-Volg deze stappen om je eigen instelling toe te voegen:
+Volg deze stappen om je eigen instelling / school toe te voegen:
 
-- <u>Instellingsnaam</u>: Vervang `...` met je **instellingsnaam**
-- <u>Naam in configuratie</u>: Vervang `"..."` met **Instellingsnaam**
-- <u>Bronmap</u>: Vervang `"..."` met de **link naar de map** waarin de VSV-bestanden staan
-- <u>Doelmap</u>: Vervang `"..."` met de **link naar de map** waarin de resultaten naar toe gestuurd moeten worden
+-   <u>Instellingsnaam</u>: Vervang `...` met je **instellingsnaam**
+-   <u>Naam in configuratie</u>: Vervang `"..."` met **Instellingsnaam**
+-   <u>Bronmap</u>: Vervang `"..."` met de **link naar de map** waarin de VSV-bestanden staan
+-   <u>Doelmap</u>: Vervang `"..."` met de **link naar de map** waarin de resultaten naar toe gestuurd moeten worden
 
+##### Keuze gebruik syntehtische data of instellings- / schooldata
+
+Kies onderstaand of je gebruik wilt maken van de syntehtische data of instellings- / schooldata, door:
+
+-   een **\#** voor de regel te **plaatsten** die je wilt **intactiveren** en
+-   een **\#** voor de regel **weg** te halen om te **activeren**.
 
 ```{r}
 # Sys.setenv(R_CONFIG_ACTIVE = "Synthetish")
 Sys.setenv(R_CONFIG_ACTIVE = "graafschap")
 ```
 
-
-
-
-
 ## Analysebestand maken
 
 ### 1. Data VSV-Startpopulatie inladen
 
-We laden hier de data in om een Startpopulatie dataset te maken. De Startpopulatie wordt opgebouwd uit meerdere bestanden, namelijk de A05 bestanden (12x) en de NRSP data (1x voorlopige dataset en 1x definitieve dataset).
+Als eerste worden de data ingeladen om een Startpopulatie dataset te maken. De Startpopulatie wordt opgebouwd uit meerdere bestanden, namelijk de A05 bestanden en de NRSP bestanden.
 
-Eerst de locatie bepalen waar de bestanden opgehaald moeten worden:
+#### 1a. Directory bepalen waar de DUO VSV-bestanden opgeslagen zijn
 
+Als alle bovenstaande stappen doorlopgen zijn, is de locatie waar de VSV-bsetanden opgeslagen zijn, vastgelegd in het config.yml bestand. Nu wordt de **data_base_dir** regel uit het config.yml bestand uitgelezen om deze locatie te bepalden:
 
 ```{r}
 bestanden <- c(list.files(config::get("data_base_dir"), recursive = TRUE, full.names=TRUE))
 ```
 
-
-
 #### 1a. A05-bestanden - Startpopulatie
 
-De A05 bestanden bevatten alle jongeren die aan het begin van het rapportagejaar (1 oktober) een relevante inschrijving hebben in et Register Onderwijsdeelnemers (ROD) en die bij uitval mogelijk een VSV-er zouden kunnen zijn. De A-rapportages zijn tussenrapportages. In de A-rapportages worden dan ook leerlingen die zich ten opzichte van de startpopulatie uitschrijven en zich (nog) niet opnieuw hebben ingeschreven, gesignaleerd: de workload. Overigens zijn de gegevens uit het Register Onderwijsdeelnemers die de basis zijn voor de startpopulatie van de A-rapportages niet direct definitief: dat gebeurt pas in de loop van het schooljaar. De Startpopulatie wordt dus ook maandelijks opnieuw bepaald, twaalf maanden achter elkaar.
-
+De A05 bestanden bevatten alle jongeren die aan het begin van het rapportagejaar (1 oktober) een relevante inschrijving hebben in het Register Onderwijsdeelnemers (ROD) en die bij uitval mogelijk een VSV-er zouden kunnen zijn. De A-rapportages zijn tussenrapportages. In de A-rapportages worden dan ook leerlingen die zich ten opzichte van de startpopulatie uitschrijven en zich (nog) niet opnieuw hebben ingeschreven, gesignaleerd: de workload. Overigens zijn de gegevens uit het Register Onderwijsdeelnemers die de basis zijn voor de startpopulatie van de A-rapportages niet direct definitief: dat gebeurt pas in de loop van het schooljaar. De Startpopulatie wordt dus ook maandelijks opnieuw bepaald, twaalf maanden achter elkaar.
 
 ##### A05
 
@@ -163,8 +166,7 @@ A05_totaal <- fs::fs_path(bestanden[grep("A05", bestanden)]) %>%
   suppressMessages()
 ```
 
-
-Omdat de bestanden, die de VSV-ers bevatten vijftien maanden aangeleverd worden, dupliceren we het laatste aangeleverde A05 bestand om ook de 13e t/m de 15e maand aan te maken.
+Omdat de bestanden, die de VSV-ers bevatten vijfien keer aangeleverd worden, dupliceren we het laatste aangeleverde A05 bestand om ook de 13e t/m de 15e maand aan te maken.
 
 RapportageMaand = 9 uit het A05 bestand wordt RapportageMaand 13-oktober:
 
@@ -190,7 +192,9 @@ A05_dpo_15dec <- A05_totaal %>%
   mutate(RapportageMaand = "15-December")
 ```
 
-Onderstaande een overzicht van de ingelezen A05-bestanden en het aantal regels per bestand:
+##### Aantal ingelezen regels per A05 bestand
+
+De onderstaande tabel laat een overzicht zien van de ingelezen A05-bestanden en het aantal regels per bestand:
 
 ```{r}
 A05_tabel <- A05_totaal |>
@@ -198,57 +202,12 @@ A05_tabel <- A05_totaal |>
     group_by(Teljaar, RapportageMaand, Bestandsnaam) |> 
     summarise(Aantal = n()) |>
     arrange(Teljaar, RapportageMaand)
+
+A05_tabel_sorted <- sorteer_tabel(A05_tabel)
+
+maak_gestylede_datatable(data = A05_tabel_sorted,
+                         caption = "Aantal leerlingen in Startpopulatie per ingelezen A05 bestand")
 ```
-
-
-
-```{r}
-#| fig-width: 10
-#| out-width: "100%"
-
-# Maak een hulpkolom om te sorteren op maandnummer
-A05_tabel_sorted <- A05_tabel |>
-  # Extraheer het maandnummer uit RapportageMaand
-  mutate(MaandNummer = as.numeric(sub("(\\d+)-.+", "\\1", RapportageMaand))) |>
-  # Sorteer op Teljaar, dan MaandNummer, dan Bestandsnaam
-  arrange(Teljaar, MaandNummer, Bestandsnaam) |>
-  # Verwijder de hulpkolom voor het tonen
-  select(-MaandNummer)
-
-# Tabel met vooraf gesorteerde data
-DT::datatable(
-  A05_tabel_sorted,
-  options = list(
-    pageLength = 21,
-    dom = 'ft',
-    ordering = TRUE,
-    autoWidth = TRUE,
-    search = list(regex = TRUE, caseInsensitive = TRUE),
-    initComplete = DT::JS(
-      "function(settings, json) {",
-      "  $(this.api().table().container()).css({'font-family': 'Arial, sans-serif'});",
-      "}"
-    ),
-    rowCallback = DT::JS(
-      "function(row, data, index) {",
-      "  if (index % 2 === 0) {",
-      "    $(row).css('background-color', 'white');",
-      "  } else {",
-      "    $(row).css('background-color', 'seashell');", 
-      "  }",
-      "}"
-    )
-  ),
-  rownames = TRUE,
-  filter = 'top',
-  class = 'cell-border',
-  caption = htmltools::tags$caption(
-    style = 'caption-side: top; text-align: center; font-size: 20px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #333333;',
-    'Aantal leerlingen in Startpopulatie per ingelezen bestand'
-  )
-)
-```
-
 
 #### 1b. NRSP-bestanden - Startpopulatie
 
@@ -308,57 +267,22 @@ NRSP_totaal <- fs::fs_path(bestanden[grep("NRSP", bestanden)]) %>%
   suppressMessages()
 ```
 
+##### Aantal ingelezen regels per NRSP bestand
 
-Onderstaande een overzicht van de ingelezen NRSP-bestanden en het aantal regels per bestand:
+De onderstaande tabel laat een overzicht zien van de ingelezen NRSP-bestanden en het aantal regels per bestand:
 
 ```{r}
 NRSP_tabel <- NRSP_totaal |>
     filter(grepl("NRSP", Bestandsnaam)) |> 
-    group_by(Teljaar, Bestandsnaam) |> 
+    group_by(Teljaar, RapportageMaand, Bestandsnaam) |> 
     summarise(Aantal = n()) |>
-    arrange(Teljaar)
+    arrange(Teljaar, RapportageMaand)
+
+NRSP_tabel_sorted <- sorteer_tabel(NRSP_tabel)
+
+maak_gestylede_datatable(data = NRSP_tabel_sorted, 
+                         caption = "Aantal leerlingen in NRSP bestand per ingelezen bestand")
 ```
-
-
-```{r}
-#| fig-width: 10
-#| out-width: "100%"
-
-# Tabel met vooraf gesorteerde data
-DT::datatable(
-  NRSP_tabel,
-  options = list(
-    pageLength = 21,
-    dom = 'ft',
-    ordering = TRUE,
-    autoWidth = TRUE,
-    search = list(regex = TRUE, caseInsensitive = TRUE),
-    initComplete = DT::JS(
-      "function(settings, json) {",
-      "  $(this.api().table().container()).css({'font-family': 'Arial, sans-serif'});",
-      "}"
-    ),
-    rowCallback = DT::JS(
-      "function(row, data, index) {",
-      "  if (index % 2 === 0) {",
-      "    $(row).css('background-color', 'white');",
-      "  } else {",
-      "    $(row).css('background-color', 'seashell');", 
-      "  }",
-      "}"
-    )
-  ),
-  rownames = TRUE,
-  filter = 'top',
-  class = 'cell-border',
-  caption = htmltools::tags$caption(
-    style = 'caption-side: top; text-align: center; font-size: 20px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #333333;',
-    'Aantal leerlingen in NRSP bestand per ingelezen bestand'
-  )
-)
-```
-
-
 
 #### 1c. Totaal bestand Starpopulatie maken
 
@@ -428,8 +352,9 @@ A04_totaal <- fs::fs_path(bestanden[grep("A04", bestanden)]) %>%
   suppressMessages()
 ```
 
+##### Aantal ingelezen regels per A04 bestand
 
-Onderstaande een overzicht van de ingelezen A04-bestanden en het aantal regels per bestand:
+De onderstaande tabel laat een overzicht zien van de ingelezen A04-bestanden en het aantal regels per bestand:
 
 ```{r}
 A04_tabel <- A04_totaal |>
@@ -437,57 +362,14 @@ A04_tabel <- A04_totaal |>
     group_by(Teljaar, RapportageMaand, BestandsnaamVSV) |> 
     summarise(Aantal = n()) |>
     arrange(Teljaar, RapportageMaand)
+
+A04_tabel_sorted <- sorteer_tabel(data = A04_tabel,
+                                  bestandsnaam_kolom = "BestandsnaamVSV")
+
+maak_gestylede_datatable(data = A04_tabel_sorted,
+                         caption = "Aantal potientiële VSV-leerlingen per ingelezen A04 bestand")
+
 ```
-
-
-
-```{r}
-#| fig-width: 10
-#| out-width: "100%"
-
-# Maak een hulpkolom om te sorteren op maandnummer
-A04_tabel_sorted <- A04_tabel |>
-  # Extraheer het maandnummer uit RapportageMaand
-  mutate(MaandNummer = as.numeric(sub("(\\d+)-.+", "\\1", RapportageMaand))) |>
-  # Sorteer op Teljaar, dan MaandNummer, dan Bestandsnaam
-  arrange(Teljaar, MaandNummer, BestandsnaamVSV) |>
-  # Verwijder de hulpkolom voor het tonen
-  select(-MaandNummer)
-
-# Tabel met vooraf gesorteerde data
-DT::datatable(
-  A04_tabel_sorted,
-  options = list(
-    pageLength = 21,
-    dom = 'ft',
-    ordering = TRUE,
-    autoWidth = TRUE,
-    search = list(regex = TRUE, caseInsensitive = TRUE),
-    initComplete = DT::JS(
-      "function(settings, json) {",
-      "  $(this.api().table().container()).css({'font-family': 'Arial, sans-serif'});",
-      "}"
-    ),
-    rowCallback = DT::JS(
-      "function(row, data, index) {",
-      "  if (index % 2 === 0) {",
-      "    $(row).css('background-color', 'white');",
-      "  } else {",
-      "    $(row).css('background-color', 'seashell');", 
-      "  }",
-      "}"
-    )
-  ),
-  rownames = TRUE,
-  filter = 'top',
-  class = 'cell-border',
-  caption = htmltools::tags$caption(
-    style = 'caption-side: top; text-align: center; font-size: 20px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #333333;',
-    'Aantal potientiële VSV-leerlingen per ingelezen bestand'
-  )
-)
-```
-
 
 ##### A14
 
@@ -527,8 +409,9 @@ A14_totaal <- fs::fs_path(bestanden[grep("A14", bestanden)]) %>%
 
 ```
 
+##### Aantal ingelezen regels per A14 bestand
 
-Onderstaande een overzicht van de ingelezen A14-bestanden en het aantal regels per bestand:
+De onderstaande tabel laat een overzicht zien van de ingelezen A14-bestanden en het aantal regels per bestand:
 
 ```{r}
 A14_tabel <- A14_totaal |>
@@ -536,57 +419,13 @@ A14_tabel <- A14_totaal |>
     group_by(Teljaar, RapportageMaand, BestandsnaamVSV) |> 
     summarise(Aantal = n()) |>
     arrange(Teljaar, RapportageMaand)
+
+A14_tabel_sorted <- sorteer_tabel(data = A14_tabel,
+                                  bestandsnaam_kolom = "BestandsnaamVSV")
+
+maak_gestylede_datatable(data = A14_tabel_sorted, 
+                         caption = "Aantal potientiële VSV-leerlingen per ingelezen A14 bestand")
 ```
-
-
-
-```{r}
-#| fig-width: 10
-#| out-width: "100%"
-
-# Maak een hulpkolom om te sorteren op maandnummer
-A14_tabel_sorted <- A14_tabel |>
-  # Extraheer het maandnummer uit RapportageMaand
-  mutate(MaandNummer = as.numeric(sub("(\\d+)-.+", "\\1", RapportageMaand))) |>
-  # Sorteer op Teljaar, dan MaandNummer, dan Bestandsnaam
-  arrange(Teljaar, MaandNummer, BestandsnaamVSV) |>
-  # Verwijder de hulpkolom voor het tonen
-  select(-MaandNummer)
-
-# Tabel met vooraf gesorteerde data
-DT::datatable(
-  A04_tabel_sorted,
-  options = list(
-    pageLength = 21,
-    dom = 'ft',
-    ordering = TRUE,
-    autoWidth = TRUE,
-    search = list(regex = TRUE, caseInsensitive = TRUE),
-    initComplete = DT::JS(
-      "function(settings, json) {",
-      "  $(this.api().table().container()).css({'font-family': 'Arial, sans-serif'});",
-      "}"
-    ),
-    rowCallback = DT::JS(
-      "function(row, data, index) {",
-      "  if (index % 2 === 0) {",
-      "    $(row).css('background-color', 'white');",
-      "  } else {",
-      "    $(row).css('background-color', 'seashell');", 
-      "  }",
-      "}"
-    )
-  ),
-  rownames = TRUE,
-  filter = 'top',
-  class = 'cell-border',
-  caption = htmltools::tags$caption(
-    style = 'caption-side: top; text-align: center; font-size: 20px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #333333;',
-    'Aantal potientiële VSV-leerlingen per ingelezen bestand'
-  )
-)
-```
-
 
 #### 2b. NenR-bestanden VSV-ers
 
@@ -625,56 +464,23 @@ NenR_totaal <-fs::fs_path(bestanden[grep("NenR", bestanden)]) %>%
   suppressMessages()
 ```
 
+##### Aantal ingelezen regels per NenR bestand
 
-Onderstaande een overzicht van de ingelezen NenR-bestanden en het aantal regels per bestand:
+De onderstaande tabel laat een overzicht zien van de ingelezen NenR-bestanden en het aantal regels per bestand:
 
 ```{r}
 NenR_tabel <- NenR_totaal |>
     filter(grepl("NenR", BestandsnaamVSV)) |> 
-    group_by(Teljaar, BestandsnaamVSV) |> 
+    group_by(Teljaar, RapportageMaand, BestandsnaamVSV) |> 
     summarise(Aantal = n()) |>
-    arrange(Teljaar)
+    arrange(Teljaar, RapportageMaand)
+
+NenR_tabel_sorted <- sorteer_tabel(data = NenR_tabel,
+                                  bestandsnaam_kolom = "BestandsnaamVSV")
+
+maak_gestylede_datatable(data = NenR_tabel_sorted, 
+                         caption = "Aantal leerlingen in NenR bestand per ingelezen bestand")
 ```
-
-
-```{r}
-#| fig-width: 10
-#| out-width: "100%"
-
-# Tabel met vooraf gesorteerde data
-DT::datatable(
-  NenR_tabel,
-  options = list(
-    pageLength = 21,
-    dom = 'ft',
-    ordering = TRUE,
-    autoWidth = TRUE,
-    search = list(regex = TRUE, caseInsensitive = TRUE),
-    initComplete = DT::JS(
-      "function(settings, json) {",
-      "  $(this.api().table().container()).css({'font-family': 'Arial, sans-serif'});",
-      "}"
-    ),
-    rowCallback = DT::JS(
-      "function(row, data, index) {",
-      "  if (index % 2 === 0) {",
-      "    $(row).css('background-color', 'white');",
-      "  } else {",
-      "    $(row).css('background-color', 'seashell');", 
-      "  }",
-      "}"
-    )
-  ),
-  rownames = TRUE,
-  filter = 'top',
-  class = 'cell-border',
-  caption = htmltools::tags$caption(
-    style = 'caption-side: top; text-align: center; font-size: 20px; font-weight: bold; font-family: Arial, Helvetica, sans-serif; color: #333333;',
-    'Aantal leerlingen in NenR bestand per ingelezen bestand'
-  )
-)
-```
-
 
 #### 2c. Totaal bestand VSV-populatie maken
 
@@ -699,6 +505,25 @@ VSVnormen <- read_csv2(here::here("data","reference","VSV_normen.csv"),
                        na = "NULL") |>
   mutate(NormDUOVSV = NormDUOVSV/1000) |>
   suppressMessages()
+
+library("tidyr") 
+
+# Transformeer de data naar het gewenste formaat
+vsv_normen_breed <- VSVnormen %>%
+  # Filter NA-waarden uit
+  filter(!is.na(Niveau)) %>%
+  # Maak een brede tabel met niveaus als kolommen
+  pivot_wider(
+    id_cols = Teljaar,
+    names_from = Niveau,
+    values_from = NormDUOVSV,
+    names_prefix = "Niveau_"
+  )
+
+maak_gestylede_datatable(
+  data = vsv_normen_breed,
+  caption = "VSV Normen per teljaar en niveau"
+)
 ```
 
 #### 3a. Normen koppplen aan totaal bestand A05
@@ -728,8 +553,15 @@ VSV_totaal <- Starterset |>
 ### 5. Wegschrijven naar een andere map
 
 ```{r}
-write.csv(VSV_totaal, "C:/Users/s.kalkers/OneDrive - Graafschap College/Documenten/__Shirley/CEDA/Data_export_tbv_PowerBI/VSV_totaal.csv") |>
-  suppressMessages()
+# Haal de lijst van bestanden op uit de opgegeven directory
+Totale_dataset <- list.files(config::get("data_results_dir"), recursive = TRUE, full.names = TRUE)
+
+# Definieer het pad voor het eindbestand
+output_file <- file.path(config::get("data_results_dir"), "VSV_totaal.csv")
+
+# Schrijf de gesorteerde data naar het eindbestand
+write.csv(VSV_totaal, output_file, row.names = FALSE) |>
+suppressMessages()
 ```
 
 ## Eerste visualisaties en analyses
@@ -745,22 +577,20 @@ Keuzemaand <- "12-September"  #"17-NenR-D"
 Keuzejaar <- "2022-2023" 
 ```
 
+1.  De gekozen kleur van de *achtergrond* is: [`r Kleur_achtergrond`]{style="background-color: `r Kleur_achtergrond`; padding: 2px 5px;"}
+2.  De gekozen kleur van de *rand* is: [`r Kleur_rand`]{style="background-color: `r Kleur_rand`; padding: 2px 5px;"}
+3.  De gekozen kleur van de *rapportagemaand* is: <u>`r Keuzemaand`</u>
+4.  De gekozen kleur van de *schooljaar* is: <u>`r Keuzejaar`</u>
+
 ### 2. Titel visualisatie aanmaken
 
 ```{r}
 mijn_titel <- paste("Aantal VSV-ers", Keuzejaar, "in rapportagemaand", Keuzemaand)
 ```
 
-### `r mijn_titel`
-
-De kleur van de achtergrond: `r Kleur_achtergrond`
-
-
-
 ### 3. KPI's visualisatie aanmaken
 
-
-```{r Berekeningen} 
+```{r Berekeningen}
 `Aantal DUO VSV Startset` <- VSV_totaal |> 
   filter(RapportageMaand == Keuzemaand,
          Teljaar == Keuzejaar) |>
@@ -796,6 +626,7 @@ Plot_aantal_VSV <- Plot_waarde(`Aantal VSV`, "Aantal VSV")
 Plot_percentage_VSV <- Plot_waarde(`Percentage VSV`, "Percentage VSV") 
 ```
 
+### <h1 style="color: #8B4500; font-family: &#39;AvantGarde&#39;, sans-serif, monospace;">`r mijn_titel`</h1>
 
 
 
