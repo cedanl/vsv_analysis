@@ -30,20 +30,22 @@ packages_base <- c(
 packages_cran <- c(
 
     # develop package
-    "slider",
-    "devtools",
-    "usethis",
-    "roxygen2",
+    #"slider",
+    #"devtools",
+    #"usethis",
+    #"roxygen2",
+    "pak",          # Install R packages fast
+    "pkgload",      # Load and test packages
+    "here",           # Set up file paths, is this necessary with this.path
     "this.path",
-    "cli",            # Create command line interfaces
-    "pak",
+    #"cli",            # Create command line interfaces
 
-    # quarto
+    # rendering
     "quarto",
     "knitr",
 
-    # visualisation
-    "ggplot2" ,       # Create plots
+    # visualisation and tables
+    "ggplot2",       # Create plots
     "patchwork",      # Stitch plots together
     #"scales",         # Scale axes
     #"gt",             # Create publication-ready tables
@@ -63,7 +65,7 @@ packages_cran <- c(
     #"rvest",          # Read html
     #"slackr",         # Send messages in Slack
     #"stringi",        # Work with other strings
-    #"stringr",        # Work with strings
+    "stringr",        # Work with strings
     #"tibble",         # Edit and create tibbles
     #"tidyr",          # Tidy data in the tidyverse environment
     #"fst",            # Perform operations with large data files
@@ -117,16 +119,26 @@ options(renv.snapshot.filter = function(project) {
 # TODO Un-edit when adding packages above to include them in snapshot
 # renv::snapshot(type = "custom")
 
-# TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
-renv::restore(confirm = FALSE)
 
+# Probeer met pak, fallback naar standaard renv restore
+tryCatch({
+    # TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
+    if (are_packages_up_to_date(packages_renv) == TRUE) {
+        message("✅ All packages already at correct versions. No need to restore.")
+    } else {
+        # Only run restore if needed
+        renv::restore(confirm = FALSE)
+    }
+}, error = function(e) {
+    message("Installation error, fallback to more simple installation.")
+    renv::clean()
+    options(renv.config.pak.enabled = FALSE)
+    renv::restore(confirm = FALSE)
+})
 
-# Load packages
 # TODO Set to TRUE when adding packages to check if there are problematic conflicts
-warn_conflicts <- FALSE
 suppressMessages(purrr::walk(packages, ~library(.x,
-                                                character.only = TRUE,
-                                                warn.conflicts = warn_conflicts)))
+                                                character.only = TRUE)))
 
 ## +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 ## WRITE-AND-CLEAR ####
