@@ -49,6 +49,7 @@ sorteer_tabel <- function(data,
 #' @param achtergrond_kleur Achtergrondkleur voor oneven rijen (default: "seashell")
 #' @param lettertype_kleur Kleur van de lettertypes (default: "#8B8682")
 #' @param kolomnaam_kleur Kleur van de kolomnamen (default: "#8B8682")
+#' @importFrom DT datatable
 #' @return Een DT::datatable object
 maak_gestylede_datatable <- function(data,
                                      caption = "Aantal leerlingen in Startpopulatie per ingelezen A05 bestand",
@@ -57,7 +58,7 @@ maak_gestylede_datatable <- function(data,
                                      lettertype_kleur = "#8B8682",
                                      kolomnaam_kleur = "#8B8682") {
 
-    DT::datatable(
+    datatable(
         data,
         options = list(
             pageLength = page_length,
@@ -108,6 +109,7 @@ maak_gestylede_datatable <- function(data,
 #' @param achtergrond_kleur De achtergrondkleur van de plot (default: "seashell")
 #' @param titel De titel van de plot (default: "Sector")
 #' @param kleurenpalet Vector met kleuren voor de verschillende groepen (default: peachpuff-tinten)
+#' @importFrom ggplot2 ggplot aes_string geom_col geom_text scale_fill_manual theme_minimal labs
 #' @return Een ggplot-object
 plot_titel_percentageVSV <- function(data,
                                       x_var = "Sector",
@@ -189,6 +191,7 @@ plot_titel_percentageVSV <- function(data,
 #' @param vsv_var De naam van de kolom die aangeeft of iemand VSV is (default: "VSV")
 #' @param groep_vars Vector met kolomnamen voor groepering, naast Teljaar en maand_var (default: "Sector")
 #' @param accuracy De nauwkeurigheid voor percentages (default: 0.1)
+#' @importFrom dplyr group_by summarise mutate filter across
 #' @return Een dataframe met VSV-percentages per groep
 #'
 bereken_vsv_percentages <- function(data,
