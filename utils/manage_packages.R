@@ -45,6 +45,7 @@ packages_cran <- c(
     "knitr",
 
     # visualisation and tables
+    "DT",            # Create interactive tables
     "ggplot2",       # Create plots
     "patchwork",      # Stitch plots together
     #"scales",         # Scale axes
@@ -67,7 +68,7 @@ packages_cran <- c(
     #"stringi",        # Work with other strings
     "stringr",        # Work with strings
     #"tibble",         # Edit and create tibbles
-    #"tidyr",          # Tidy data in the tidyverse environment
+    "tidyr",          # Tidy data in the tidyverse environment
     #"fst",            # Perform operations with large data files
     "dplyr"#,          # Utilise the dplyr environment
     #"vvmover",
