@@ -27,7 +27,6 @@ options(renv.config.install.binary = TRUE)
 source("utils/renv/activate.R")
 
 # Trigger load
-# Trigger load
 if (interactive() && file.exists("utils/00_setup.R")) {
     # Safer cross-platform prompt approach
     message("Setup script detected. Run 00_setup.R? (y/n)")
