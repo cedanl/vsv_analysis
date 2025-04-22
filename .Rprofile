@@ -27,12 +27,25 @@ options(renv.config.install.binary = TRUE)
 source("utils/renv/activate.R")
 
 # Trigger load
+# Trigger load
 if (interactive() && file.exists("utils/00_setup.R")) {
-    # prompt of readline doesn't work from Rrofile
-    message("Setup script detected. Run 00_setup.R? (press ENTER to run, ESC to skip):")
-    response <- readline(" ")
-    if (tolower(response) == "" || tolower(response) == "y") {
+    # Safer cross-platform prompt approach
+    message("Setup script detected. Run 00_setup.R? (y/n)")
+
+    # Use tryCatch to handle potential readline errors
+    response <- tryCatch({
+        user_input <- readLines(n=1)
+        if (length(user_input) == 0) "" else user_input
+    }, error = function(e) {
+        message("Error reading input, defaulting to not run setup.\n Run `source('utils/00_setup.R')` in the R console.")
+        "n"
+    })
+
+    # Check response and run if appropriate
+    if (tolower(substr(response, 1, 1)) == "y") {
+        message("Running setup script...")
         source("utils/00_setup.R")
+    } else {
+        message("Setup script skipped.")
     }
-    rm(response)
 }
