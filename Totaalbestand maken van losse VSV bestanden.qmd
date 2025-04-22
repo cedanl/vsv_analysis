@@ -56,14 +56,17 @@ source(here::here("helpers.R"))
 cat("Om het config.yml bestand te openen, voer `open_config()` uit in de Console.")
 ```
 
-##### Config.yml bestand aanpassen
+##### Gebruik data eigen instelling
 
 Volg deze stappen om je eigen instelling / school toe te voegen:
 
+-   <u> Voer `open_config()` uit in de R console
 -   <u>Instellingsnaam</u>: Vervang `...` met je **instellingsnaam**
 -   <u>Naam in configuratie</u>: Vervang `"..."` met **Instellingsnaam**
 -   <u>Bronmap</u>: Vervang `"..."` met de **link naar de map** waarin de VSV-bestanden staan
 -   <u>Doelmap</u>: Vervang `"..."` met de **link naar de map** waarin de resultaten naar toe gestuurd moeten worden
+
+Het alternatief is om synthetische data te gebruiken.
 
 ##### Keuze gebruik syntehtische data of instellings- / schooldata
 
@@ -73,7 +76,7 @@ Kies onderstaand of je gebruik wilt maken van de syntehtische data of instelling
 -   een **\#** voor de regel **weg** te halen om te **activeren**.
 
 ```{r}
-# Sys.setenv(R_CONFIG_ACTIVE = "Synthetish")
+# Sys.setenv(R_CONFIG_ACTIVE = "default")
 Sys.setenv(R_CONFIG_ACTIVE = "graafschap")
 ```
 
@@ -506,8 +509,6 @@ VSVnormen <- read_csv2(here::here("data","reference","VSV_normen.csv"),
   mutate(NormDUOVSV = NormDUOVSV/1000) |>
   suppressMessages()
 
-library("tidyr") 
-
 # Transformeer de data naar het gewenste formaat
 vsv_normen_breed <- VSVnormen %>%
   # Filter NA-waarden uit
@@ -635,7 +636,6 @@ combined_plot <- Plot_aantal_starterset + plot_spacer() + Plot_aantal_VSV + plot
 combined_plot
 ```
 
-
 ### 4. Grafiek visualisaties aanmaken
 
 ```{r}
@@ -680,7 +680,6 @@ Plot_niveau_percentageVSV <- plot_titel_percentageVSV(data = VSVperc_per_Teljaar
 Plot_niveau_percentageVSV
 ```
 
-
 ```{r}
 # Bereken het gemiddelde percentage per teljaar en niveau
 
@@ -704,11 +703,6 @@ Plot_leerweg_percentageVSV <- plot_titel_percentageVSV(data = VSVperc_per_Teljaa
 Plot_leerweg_percentageVSV
 ```
 
-
-
-
-
-
 ## 5. Dashboard
 
 <h1 style="color: #8B4500; font-family: &#39;AvantGarde&#39;, sans-serif, monospace;">
@@ -716,7 +710,6 @@ Plot_leerweg_percentageVSV
 `r mijn_titel`
 
 </h1>
-
 
 ```{r}
 #| fig-width: 12
@@ -744,8 +737,6 @@ Overzichtsdashboard1 <- Plot_aantal_starterset + Plot_aantal_VSV + Plot_percenta
 
 #Overzichtsdashboard1
 ```
-
-
 
 ```{r Overzichtsdashboard}
 #| fig-width: 10
