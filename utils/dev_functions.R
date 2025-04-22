@@ -68,8 +68,6 @@ clear_script_objects <- function(..., filepath = NULL, list = character(), pos =
     }
 }
 
-# install_homebrew_and_deps.R
-
 install_homebrew <- function() {
     if (Sys.which("brew") == "") {
         message("Installing Homebrew...")
@@ -303,3 +301,118 @@ are_packages_up_to_date <- function(packages) {
 
     return(all_up_to_date)
 }
+
+
+# TODO Experimental code to programmatically detect system dependencies
+# For now I have harcoded the system dependencies for the packages I use
+get_system_dependencies <- function(packages, os = "macos-arm64") {
+    # TODO Check the possible and encode them
+    #os <- match.arg(os)
+
+    # Create a temporary file for the results
+    tmp_file <- tempfile()
+
+    # Use pak to get system requirements
+    if (!requireNamespace("pak", quietly = TRUE)) {
+        install.packages("pak")
+    }
+
+    # Get dependencies for each package
+    deps <- list()
+
+    for (pkg in packages) {
+        system_reqs <- pak::pkg_sysreqs(pkg, sysreqs_platform = os)
+        if (length(system_reqs) > 0 && !is.null(system_reqs$packages)) {
+            deps[[pkg]] <- system_reqs$packages
+        } else {
+            deps[[pkg]] <- NA
+        }
+    }
+
+    for (pkg in packages) {
+        tryCatch({
+            # Get system requirements for the package
+            system_reqs <- pak::pkg_sysreqs(pkg, sysreqs_platform = os)
+            # if (os == "ubuntu") {
+            #     system_reqs <- pak::pkg_sysreqs(pkg, os = "ubuntu-22.04")
+            # } else {
+            #     system_reqs <- pak::pkg_sysreqs(pkg, os = "macos")
+            # }
+
+            # Extract library names from system requirements
+            if (length(system_reqs) > 0 && !is.null(system_reqs$packages)) {
+                deps[[pkg]] <- system_reqs$packages
+            } else {
+                deps[[pkg]] <- NA
+            }
+        }, error = function(e) {
+            deps[[pkg]] <<- paste("Error:", e$message)
+        })
+    }
+
+    # Convert to data frame
+    result <- data.frame(
+        package = names(deps),
+        system_libraries = sapply(deps, function(x) {
+            if (length(x) == 0 || all(is.na(x))) {
+                return("None (pure R package)")
+            } else {
+                return(paste(x, collapse = ", "))
+            }
+        }),
+        stringsAsFactors = FALSE
+    )
+
+    return(result)
+}
+
+# Extract packages from manage_packages.R
+extract_packages_from_file <- function(filepath) {
+    # Read the file
+    lines <- readLines(filepath)
+
+    # Find the packages_cran and packages_github vectors
+    start_cran <- grep("packages_cran <- c", lines, fixed = TRUE)
+    end_cran_candidates <- grep("^\\s*\\)\\s*$", lines)
+    end_cran <- min(end_cran_candidates[end_cran_candidates > start_cran])
+
+    start_github <- grep("packages_github <- c", lines, fixed = TRUE)
+    end_github_candidates <- grep("^\\s*\\)\\s*$", lines)
+    end_github <- min(end_github_candidates[end_github_candidates > start_github])
+
+    # Extract package names
+    cran_pkgs <- lines[(start_cran+1):(end_cran-1)]
+    github_pkgs <- lines[(start_github+1):(end_github-1)]
+
+    # Clean up package names
+    clean_pkg <- function(pkg_line) {
+        pkg <- gsub("^\\s*\"(.+?)\".*$", "\\1", pkg_line)
+        pkg <- gsub(",\\s*$", "", pkg)
+        pkg <- gsub("#.*$", "", pkg)  # Remove comments
+        pkg <- trimws(pkg)
+        return(pkg)
+    }
+
+    cran_pkgs <- sapply(cran_pkgs, clean_pkg)
+    cran_pkgs
+    github_pkgs <- sapply(github_pkgs, clean_pkg)
+
+    # Combine and filter out empty strings
+    all_pkgs <- c(cran_pkgs, github_pkgs)
+    all_pkgs <- all_pkgs[nchar(all_pkgs) > 0]
+
+    return(all_pkgs)
+}
+
+# file_path <- "utils/manage_packages.R"
+#
+# # Usage
+# packages <- extract_packages_from_file("utils/manage_packages.R")
+#
+# ubuntu_deps <- get_system_dependencies(packages, os = "ubuntu")
+#
+# # Combine results
+# result <- data.frame(
+#     package = ubuntu_deps$package,
+#     ubuntu_libs = ubuntu_deps$system_libraries
+# )
