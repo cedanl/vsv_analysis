@@ -28,23 +28,26 @@ source("utils/renv/activate.R")
 
 # Trigger load
 if (interactive() && file.exists("utils/00_setup.R")) {
-    # Safer cross-platform prompt approach
-    message("Setup script detected. Run 00_setup.R? (press ENTER or 'y' to run, any other key to skip):")
-
-    # Use tryCatch to handle potential readline errors
-    response <- tryCatch({
-        user_input <- readLines(n=1)
-        if (length(user_input) == 0 || user_input == "") "" else user_input
-    }, error = function(e) {
-        message("Error reading input, defaulting to not run setup.")
-        "n"
-    })
-
-    # Check if response is empty (ENTER) or starts with "y"
-    if (response == "" || tolower(substr(response, 1, 1)) == "y") {
-        message("Running setup script...")
-        source("utils/00_setup.R")
+    if (.Platform$OS.type == "windows") {
+        # Windows-specifieke methode
+        response <- winDialog(type = "yesno",
+                              "Setup script detected. Run 00_setup.R?")
+        if (response == "YES") {
+            source("utils/00_setup.R")
+        }
     } else {
-        message("Setup script skipped.")
+        # Unix/Mac methode
+        message("Setup script detected. Run 00_setup.R? (press ENTER or 'y' to run, any other key to skip):")
+        response <- tryCatch({
+            user_input <- readLines(n=1)
+            if (length(user_input) == 0 || user_input == "") "" else user_input
+        }, error = function(e) {
+            message("Error reading input, defaulting to not run setup.")
+            "n"
+        })
+
+        if (response == "" || tolower(substr(response, 1, 1)) == "y") {
+            source("utils/00_setup.R")
+        }
     }
 }
