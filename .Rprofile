@@ -48,12 +48,3 @@ if (interactive() && file.exists("utils/00_setup.R")) {
         message("Setup script skipped.")
     }
 }
-
-    # Check response and run if appropriate
-    if (tolower(substr(response, 1, 1)) == "y") {
-        message("Running setup script...")
-        source("utils/00_setup.R")
-    } else {
-        message("Setup script skipped.")
-    }
-}
