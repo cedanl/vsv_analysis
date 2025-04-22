@@ -42,7 +42,7 @@ if (interactive() && file.exists("utils/00_setup.R")) {
             user_input <- readLines(n=1)
             if (length(user_input) == 0 || user_input == "") "" else user_input
         }, error = function(e) {
-            message("Error reading input, defaulting to not run setup.")
+            message("Error reading input, defaulting to not run setup.\n Run `source('utils/00_setup.R')` manually if needed.")
             "n"
         })
 
