@@ -30,11 +30,12 @@ source("utils/renv/activate.R")
 if (interactive() && file.exists("utils/00_setup.R")) {
     if (.Platform$OS.type == "windows") {
         # Windows-specifieke methode
-        response <- winDialog(type = "yesno",
-                              "Setup script detected. Run 00_setup.R?")
-        if (response == "YES") {
-            source("utils/00_setup.R")
-        }
+        source("utils/00_setup.R")
+        # response <- winDialog(type = "yesno",
+        #                       "Setup script detected. Run 00_setup.R?")
+        # if (response == "YES") {
+        #     source("utils/00_setup.R")
+        # }
     } else {
         # Unix/Mac methode
         message("Setup script detected. Run 00_setup.R? (press ENTER or 'y' to run, any other key to skip):")
