@@ -28,27 +28,16 @@ source("utils/renv/activate.R")
 
 # Trigger load
 if (interactive() && file.exists("utils/00_setup.R")) {
-    if (.Platform$OS.type == "windows") {
-        # Windows-specifieke methode
-        source("utils/00_setup.R")
-        # response <- winDialog(type = "yesno",
-        #                       "Setup script detected. Run 00_setup.R?")
-        # if (response == "YES") {
-        #     source("utils/00_setup.R")
-        # }
-    } else {
-        # Unix/Mac methode
-        message("Setup script detected. Run 00_setup.R? (press ENTER or 'y' to run, any other key to skip):")
-        response <- tryCatch({
-            user_input <- readLines(n=1)
-            if (length(user_input) == 0 || user_input == "") "" else user_input
-        }, error = function(e) {
-            message("Error reading input, defaulting to not run setup.\n Run `source('utils/00_setup.R')` manually if needed.")
-            "n"
-        })
+    message("Setup script detected. Run 00_setup.R? (press ENTER or 'y' to run, any other key to skip):")
+    response <- tryCatch({
+        user_input <- readline()
+        if (length(user_input) == 0 || user_input == "") "" else user_input
+    }, error = function(e) {
+        message("Error reading input, defaulting to not run setup.\n Run `source('utils/00_setup.R')` manually if needed.")
+        "n"
+    })
 
-        if (response == "" || tolower(substr(response, 1, 1)) == "y") {
-            source("utils/00_setup.R")
-        }
+    if (response == "" || tolower(substr(response, 1, 1)) == "y") {
+        source("utils/00_setup.R")
     }
 }
