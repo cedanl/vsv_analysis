@@ -20,3 +20,6 @@ source("utils/manage_packages.R")
 clear_script_objects(filepath = "utils/dev_functions.R")
 
 load_all()
+
+message("Render voor analyse: Totaalbestand maken van losse VSV bestanden.qmd")
+rstudioapi::navigateToFile("Totaalbestand maken van losse VSV bestanden.qmd")
