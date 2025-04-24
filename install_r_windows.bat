@@ -314,6 +314,25 @@ echo Cleaning up... >> setup_log.txt
 rd /S /Q "%~dp0%PACKAGES_DIR%" >nul 2>&1
 del %PACKAGES_ZIP% %REPO_ZIP%
 
+:: Configure RStudio settings
+echo Configuring RStudio settings...
+echo Configuring RStudio settings... >> setup_log.txt
+
+:: Create RStudio preferences directory if it doesn't exist
+if not exist "%LOCALAPPDATA%\RStudio" mkdir "%LOCALAPPDATA%\RStudio"
+
+:: Create rstudio-prefs.json with desired settings
+(
+echo {
+echo   "restore_last_project": true,
+echo   "restore_source_documents": false,
+echo   "load_workspace": false,
+echo   "save_workspace": "never",
+echo   "always_save_history": false,
+echo   "restore_workspace": false
+echo }
+) > "%LOCALAPPDATA%\RStudio\rstudio-prefs.json"
+
 :: Calculate duration
 for /f "tokens=1-4 delims=:.," %%a in ("%start_time%") do (
     set /a "start=(((%%a*60)+1%%b %% 100)*60+1%%c %% 100)*100+1%%d %% 100"
@@ -342,7 +361,41 @@ echo Total duration: %duration_minutes% minutes and %remaining_seconds% seconds 
 
 del setup_log.txt
 
-:: Keep window open
+:: Open the project in RStudio
 echo.
-echo Press any key to exit...
-pause >nul
+echo Opening VSV Analysis project in RStudio...
+
+:: Find RStudio executable
+set "RSTUDIO_EXE="
+if exist "C:\Program Files\RStudio\bin\rstudio.exe" (
+    set "RSTUDIO_EXE=C:\Program Files\RStudio\bin\rstudio.exe"
+) else if exist "C:\Program Files\RStudio\rstudio.exe" (
+    set "RSTUDIO_EXE=C:\Program Files\RStudio\rstudio.exe"
+) else if exist "C:\Program Files (x86)\RStudio\bin\rstudio.exe" (
+    set "RSTUDIO_EXE=C:\Program Files (x86)\RStudio\bin\rstudio.exe"
+) else if exist "C:\Program Files (x86)\RStudio\rstudio.exe" (
+    set "RSTUDIO_EXE=C:\Program Files (x86)\RStudio\rstudio.exe"
+)
+
+:: Open project if RStudio is found
+if defined RSTUDIO_EXE (
+    if exist "%PROJECT_FILE%" (
+        start "" "%RSTUDIO_EXE%" "%PROJECT_FILE%"
+        timeout /t 5 >nul
+    ) else (
+        echo Project file not found: %PROJECT_FILE%
+        echo Opening RStudio without project...
+        start "" "%RSTUDIO_EXE%"
+    )
+) else (
+    echo RStudio executable not found. Please open RStudio manually and load the project.
+    :: Keep window open
+    echo.
+    echo Press any key to exit...
+    pause >nul
+)
+
+:: Keep window open for 10 seconds before closing
+echo.
+echo This window will close in 10 seconds...
+timeout /t 10 >nul
