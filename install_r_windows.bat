@@ -46,6 +46,7 @@ set "RSTUDIO_INSTALLER=RStudio-Installer.exe"
 set "REPO_ZIP=repo.zip"
 set "PACKAGES_ZIP=packages.zip"
 set "REPO_DIR=vsv_analysis"
+set "PROJECT_FILE=%~dp0%REPO_DIR%\vsv_analysis.Rproj"
 set "PACKAGES_DIR=packages"
 
 :: Initialize flags
