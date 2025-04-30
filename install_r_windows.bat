@@ -390,6 +390,12 @@ if defined RSTUDIO_EXE (
         echo Opening RStudio without project...
         start "" "%RSTUDIO_EXE%"
     )
+
+    :: Keep window open for 10 seconds before closing
+    echo.
+    echo This window will close in 10 seconds...
+    timeout /t 10 >nul
+
 ) else (
     echo RStudio executable not found. Please open RStudio manually and load the project.
     :: Keep window open
@@ -397,8 +403,3 @@ if defined RSTUDIO_EXE (
     echo Press any key to exit...
     pause >nul
 )
-
-:: Keep window open for 10 seconds before closing
-echo.
-echo This window will close in 10 seconds...
-timeout /t 10 >nul
