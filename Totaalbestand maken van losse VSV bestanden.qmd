@@ -557,6 +557,12 @@ VSV_totaal <- Starterset |>
 # Haal de lijst van bestanden op uit de opgegeven directory
 Totale_dataset <- list.files(config::get("data_results_dir"), recursive = TRUE, full.names = TRUE)
 
+# Maak een nieuwe directory aan voor de resultaten als die niet bestaat 
+if (!dir.exists(config::get("data_results_dir"))) {
+  dir.create(config::get("data_results_dir"), recursive = TRUE)
+  message(paste("Created directory:", config::get("data_results_dir")))
+}
+
 # Definieer het pad voor het eindbestand
 output_file <- file.path(config::get("data_results_dir"), "VSV_totaal.csv")
 
