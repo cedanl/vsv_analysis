@@ -180,7 +180,27 @@ if "%RSTUDIO_FOUND%"=="0" (
     
     echo RStudio installation completed
     echo RStudio installation completed >> setup_log.txt
-    
+
+    :: Configure RStudio settings
+    echo Configuring RStudio settings...
+    echo Configuring RStudio settings... >> setup_log.txt
+
+    :: Create RStudio preferences directory if it doesn't exist
+    if not exist "%LOCALAPPDATA%\RStudio" mkdir "%LOCALAPPDATA%\RStudio"
+
+    :: Create rstudio-prefs.json with desired settings
+    (
+    echo {
+    echo   "restore_last_project": true,
+    echo   "restore_source_documents": false,
+    echo   "load_workspace": false,
+    echo   "save_workspace": "never",
+    echo   "always_save_history": false,
+    echo   "restore_workspace": false
+    echo   "rmd_chunk_output_inline": false
+    echo }
+    ) > "%LOCALAPPDATA%\RStudio\rstudio-prefs.json"
+
     :: Remove RStudio installer
     if exist "%RSTUDIO_INSTALLER%" del "%RSTUDIO_INSTALLER%"
 ) else (
@@ -315,24 +335,6 @@ echo Cleaning up... >> setup_log.txt
 rd /S /Q "%~dp0%PACKAGES_DIR%" >nul 2>&1
 del %PACKAGES_ZIP% %REPO_ZIP%
 
-:: Configure RStudio settings
-echo Configuring RStudio settings...
-echo Configuring RStudio settings... >> setup_log.txt
-
-:: Create RStudio preferences directory if it doesn't exist
-if not exist "%LOCALAPPDATA%\RStudio" mkdir "%LOCALAPPDATA%\RStudio"
-
-:: Create rstudio-prefs.json with desired settings
-(
-echo {
-echo   "restore_last_project": true,
-echo   "restore_source_documents": false,
-echo   "load_workspace": false,
-echo   "save_workspace": "never",
-echo   "always_save_history": false,
-echo   "restore_workspace": false
-echo }
-) > "%LOCALAPPDATA%\RStudio\rstudio-prefs.json"
 
 :: Calculate duration
 for /f "tokens=1-4 delims=:.," %%a in ("%start_time%") do (
