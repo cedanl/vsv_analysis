@@ -11,9 +11,11 @@ if (platform == "macOS") {
     source("utils/install_mac_os_system_deps.R")
 }
 
-if (platform == "windows") {
-    source("utils/install_windows_system_deps.R")
-}
+# TODO Only needed for dev-branch where packages need to be installed, rtools detection
+# is buggy
+# if (platform == "windows") {
+#     source("utils/install_windows_system_deps.R")
+# }
 
 source("utils/manage_packages.R")
 
@@ -22,4 +24,8 @@ clear_script_objects(filepath = "utils/dev_functions.R")
 load_all()
 
 message("Render voor analyse: Totaalbestand maken van losse VSV bestanden.qmd")
-rstudioapi::navigateToFile("Totaalbestand maken van losse VSV bestanden.qmd")
+# TODO Starting in R Studio works, interactive is more general, later on might need
+# to verify if this works in VS Code / Positron etc
+if (interactive()) { # if (rstudioapi::isAvailable()) {
+    rstudioapi::navigateToFile("Totaalbestand maken van losse VSV bestanden.qmd")
+}
