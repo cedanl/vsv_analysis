@@ -37,7 +37,7 @@ set "R_URL=https://cran.r-project.org/bin/windows/base/old/4.4.3/R-4.4.3-win.exe
 :: set "RTOOLS_URL=https://cran.r-project.org/bin/windows/Rtools/rtools44/files/rtools44-6459-6401.exe"
 set "RSTUDIO_URL=https://surfdrive.surf.nl/files/index.php/s/3FFZMKFXCM7zB3f/download"
 set "REPO_URL=https://github.com/cedanl/vsv_analysis"
-set "ZIP_URL=https://surfdrive.surf.nl/files/index.php/s/OcqzSL0dLNBiiMR/download"
+set "ZIP_URL=https://surfdrive.surf.nl/files/index.php/s/JB6RzGvaqfzqMLu/download"
 
 :: Filenames
 set "R_INSTALLER=R-Installer.exe"
