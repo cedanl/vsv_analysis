@@ -12,6 +12,7 @@ if '%errorlevel%' NEQ '0' (
 :: Keep window open for debugging
 if "%1"=="ADMIN" (
     echo Running as administrator...
+    cd /d "%~dp0"
 )
 
 :: Record start time
