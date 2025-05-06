@@ -60,7 +60,7 @@ cat("Om het config.yml bestand te openen, voer `open_config()` uit in de Console
 
 Volg deze stappen om je eigen instelling / school toe te voegen:
 
--   <u> Voer `open_config()` uit in de R console
+-   <u>Voer `open_config()` uit</u> in de R console
 -   <u>Instellingsnaam</u>: Vervang `...` met je **instellingsnaam**
 -   <u>Naam in configuratie</u>: Vervang `"..."` met **Instellingsnaam**
 -   <u>Bronmap</u>: Vervang `"..."` met de **link naar de map** waarin de VSV-bestanden staan
