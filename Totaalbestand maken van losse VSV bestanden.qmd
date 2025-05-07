@@ -76,8 +76,8 @@ Kies onderstaand of je gebruik wilt maken van de syntehtische data of instelling
 -   een **\#** voor de regel **weg** te halen om te **activeren**.
 
 ```{r}
-# Sys.setenv(R_CONFIG_ACTIVE = "default")
-Sys.setenv(R_CONFIG_ACTIVE = "graafschap")
+ Sys.setenv(R_CONFIG_ACTIVE = "default")
+# Sys.setenv(R_CONFIG_ACTIVE = "graafschap")
 ```
 
 ## Analysebestand maken
@@ -201,7 +201,7 @@ De onderstaande tabel laat een overzicht zien van de ingelezen A05-bestanden en 
 
 ```{r}
 A05_tabel <- A05_totaal |>
-    filter(grepl("A05I24ZZ.csv", Bestandsnaam)) |> 
+    filter(grepl("A05", Bestandsnaam)) |> 
     group_by(Teljaar, RapportageMaand, Bestandsnaam) |> 
     summarise(Aantal = n()) |>
     arrange(Teljaar, RapportageMaand)
@@ -361,7 +361,7 @@ De onderstaande tabel laat een overzicht zien van de ingelezen A04-bestanden en 
 
 ```{r}
 A04_tabel <- A04_totaal |>
-    filter(grepl("A04I24ZZ.csv", BestandsnaamVSV)) |> 
+    filter(grepl("A04", BestandsnaamVSV)) |> 
     group_by(Teljaar, RapportageMaand, BestandsnaamVSV) |> 
     summarise(Aantal = n()) |>
     arrange(Teljaar, RapportageMaand)
@@ -418,7 +418,7 @@ De onderstaande tabel laat een overzicht zien van de ingelezen A14-bestanden en 
 
 ```{r}
 A14_tabel <- A14_totaal |>
-    filter(grepl("A14I24ZZ.csv", BestandsnaamVSV)) |> 
+    filter(grepl("A14", BestandsnaamVSV)) |> 
     group_by(Teljaar, RapportageMaand, BestandsnaamVSV) |> 
     summarise(Aantal = n()) |>
     arrange(Teljaar, RapportageMaand)
