@@ -1,0 +1,12 @@
+Script started at wo 07-05-2025 11:54:45,47 
+Current directory: C:\Users\s.kalkers\OneDrive - Graafschap College\Documenten\_GitHub\Shirley\VSV_in_R\vsv_analysis 
+Download directory: C:\Users\s.kalkers\OneDrive - Graafschap College\Documenten\_GitHub\Shirley\VSV_in_R\vsv_analysis\ 
+Script directory is: C:\Users\s.kalkers\OneDrive - Graafschap College\Documenten\_GitHub\Shirley\VSV_in_R\vsv_analysis\ 
+Script started at wo 07-05-2025 11:55:15,04 
+Current directory: C:\Users\s.kalkers\OneDrive - Graafschap College\Documenten\_GitHub\Shirley\VSV_in_R\vsv_analysis 
+Download directory: C:\Users\s.kalkers\OneDrive - Graafschap College\Documenten\_GitHub\Shirley\VSV_in_R\vsv_analysis\ 
+Script directory is: C:\Users\s.kalkers\OneDrive - Graafschap College\Documenten\_GitHub\Shirley\VSV_in_R\vsv_analysis\ 
+Script started at wo 07-05-2025 12:05:39,59 
+Current directory: C:\Users\s.kalkers\OneDrive - Graafschap College\Documenten\_GitHub\Shirley\VSV_in_R\vsv_analysis 
+Download directory: C:\Users\s.kalkers\OneDrive - Graafschap College\Documenten\_GitHub\Shirley\VSV_in_R\vsv_analysis\ 
+Script directory is: C:\Users\s.kalkers\OneDrive - Graafschap College\Documenten\_GitHub\Shirley\VSV_in_R\vsv_analysis\ 

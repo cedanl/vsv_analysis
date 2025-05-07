@@ -39,9 +39,7 @@ In dit project worden DUO data met betrekking tot voortijdig schoolverlaters (VS
 
 ### 1. Instellen gebruik synthetische data of instellings- of schooldata
 
-Voor het gebruik van de synthetische data, hoeft niets aangepast te worden in het config.yml betand. Verderop zal nog wel de keuze gemaakt moeten worden of gebruik gemaakt wordt van de instellings- of schooldata.
-
-Om de instellings- of schooldata te gebruiken, zal eerst het volgende bestand aangepast moeten worden: config.yml. Hoe dat in zijn werk gaat, staat hieronder beschreven.
+Voor het gebruik van de synthetische data, hoeft niets aangepast te worden. Om de instellings- of schooldata te gebruiken, zal eerst het volgende bestand aangepast moeten worden: config.yml. Hoe dat in zijn werk gaat, staat hieronder beschreven.
 
 
 
@@ -67,15 +65,20 @@ source(here::here("helpers.R"))
 
 Volg deze stappen om je eigen instelling of school toe te voegen:
 
--   <u>Voer `open_config()` uit</u> in de R console
--   <u>Instellingsnaam</u>: Vervang `...` met je **instellingsnaam**
--   <u>Naam in configuratie</u>: Vervang `"..."` met **Instellingsnaam**
--   <u>Bronmap</u>: Vervang `"..."` met de **link naar de map** waarin de VSV-bestanden staan
--   <u>Doelmap</u>: Vervang `"..."` met de **link naar de map** waarin de resultaten naar toe gestuurd moeten worden
--   <u><p>Druk op</u>: <img src="Pictures/Diskette.png" alt="Diskette" style="display:inline; width:30px; height:30px;"> om het bestand op te slaan</p>
+-   Voer **`open_config()`** uit in de <u>R console</u>. De config.yml wordt geopend.
 
 
-Het alternatief is om synthetische data te gebruiken.
+Pas het volgende aan in de config.yml:
+
+-   <u>Instellingsnaam</u>: Vervang de drie puntjes in de regel `...:` met je **Instellingsnaam**
+-   <u>Naam in configuratie</u>: Vervang de drie puntjes in de regel `name: "..."` met je **Instellingsnaam**
+-   <u>Bronmap</u>: Vervang de drie puntjes in de regel `data_base_dir: "..."` met de **link naar de map** waarin de VSV-bestanden staan
+-   <u>Doelmap</u>: Vervang de drie puntjes in de regel `data_results_dir: "..."` met de **link naar de map** waarin de resultaten naar toe gestuurd moeten worden
+
+<u><p>Druk op</u>: <img src="Pictures/Diskette.png" alt="Diskette" style="display:inline; width:30px; height:30px;"> om het bestand op te slaan</p>
+
+
+Het alternatief is om synthetische data te gebruiken. Dan hoef je de config.yml niet aan te passen.
 
 
 
