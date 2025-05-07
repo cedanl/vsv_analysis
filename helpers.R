@@ -165,6 +165,7 @@ plot_titel_percentageVSV <- function(data,
         theme(
             plot.background = element_rect(fill = achtergrond_kleur),
             axis.text.y = element_blank(),
+            axis.text.x = element_text(angle = 45, hjust = 1),
             legend.position = "top",
             legend.justification = "left"
         ) +

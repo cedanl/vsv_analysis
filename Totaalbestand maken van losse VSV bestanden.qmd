@@ -12,7 +12,7 @@ format:
     code-fold: true
     code-summary: "Laat code zien"
 execute:
-  cache: true
+  cache: true #false
   freeze: auto
   include: true
   warning: false
@@ -34,11 +34,15 @@ source("helpers.R")
 
 In dit project worden DUO data m.b.t. voortijdig schoolverlaters (VSV) opgehaald, bewerkt en gekoppeld, zodat er een analysebestand onstaat. Vervolgens wordt een eerste aanzet gedaan om de data te valideren en te visualiseren. Het is mogelijk gebruik te maken van synthetische data (gesimuleerde data) of data van de instelling / school.
 
+
+
 ##### Instellen gebruik syntehtische data of instellings- / schooldata
 
 Voor het gebruik van de synthetische data, hoeft niets aangepast te worden in het config.yml betand. Verderop zal nog wel de keuze gemaakt moeten worden of gebruik gemaakt wordt van de instellings- / schooldata.
 
 Om de instellings- / schooldata te gebruiken, zal eerst het volgende bestand aangepast moeten worden: config.yml. Hoe dat in zijn werk gaat, staat hieronder beschreven.
+
+
 
 ##### Config.yml bestand bekijken
 
@@ -49,12 +53,14 @@ Dit staat nu in de config.yml:
 cat(readLines(here::here("config.yml")), sep = "\n")
 ```
 
+
 ```{r}
 #| echo: false
 #| results: asis
 source(here::here("helpers.R"))
 cat("Om het config.yml bestand te openen, voer `open_config()` uit in de Console.")
 ```
+
 
 ##### Gebruik data eigen instelling
 
@@ -65,8 +71,12 @@ Volg deze stappen om je eigen instelling / school toe te voegen:
 -   <u>Naam in configuratie</u>: Vervang `"..."` met **Instellingsnaam**
 -   <u>Bronmap</u>: Vervang `"..."` met de **link naar de map** waarin de VSV-bestanden staan
 -   <u>Doelmap</u>: Vervang `"..."` met de **link naar de map** waarin de resultaten naar toe gestuurd moeten worden
+-   <u><p>Druk op</u>: <img src="Pictures/Diskette.png" alt="Diskette" style="display:inline; width:30px; height:30px;"> om het bestand op te slaan</p>
+
 
 Het alternatief is om synthetische data te gebruiken.
+
+
 
 ##### Keuze gebruik syntehtische data of instellings- / schooldata
 
@@ -76,9 +86,14 @@ Kies onderstaand of je gebruik wilt maken van de syntehtische data of instelling
 -   een **\#** voor de regel **weg** te halen om te **activeren**.
 
 ```{r}
- Sys.setenv(R_CONFIG_ACTIVE = "default")
-# Sys.setenv(R_CONFIG_ACTIVE = "graafschap")
+# Sys.setenv(R_CONFIG_ACTIVE = "default")
+ Sys.setenv(R_CONFIG_ACTIVE = "graafschap")
 ```
+
+
+<u><p>Let op!</u> Voordat je op <img src="Pictures/Render.png" alt="Render" style="display:inline; width:80px; height:28px;"> drukt: zorg dat **regel 15** in dit QMD-bestand op **false** staat: <img src="Pictures/Cache is false.png" alt="Cache is false" style="display:inline; width:160px; height:20px;"> i.p.v. <img src="Pictures/Cache is true.png" alt="Cache is true" style="display:inline; width:200px; height:20px;"> </p>
+
+
 
 ## Analysebestand maken
 
@@ -97,6 +112,7 @@ bestanden <- c(list.files(config::get("data_base_dir"), recursive = TRUE, full.n
 #### 1a. A05-bestanden - Startpopulatie
 
 De A05 bestanden bevatten alle jongeren die aan het begin van het rapportagejaar (1 oktober) een relevante inschrijving hebben in het Register Onderwijsdeelnemers (ROD) en die bij uitval mogelijk een VSV-er zouden kunnen zijn. De A-rapportages zijn tussenrapportages. In de A-rapportages worden dan ook leerlingen die zich ten opzichte van de startpopulatie uitschrijven en zich (nog) niet opnieuw hebben ingeschreven, gesignaleerd: de workload. Overigens zijn de gegevens uit het Register Onderwijsdeelnemers die de basis zijn voor de startpopulatie van de A-rapportages niet direct definitief: dat gebeurt pas in de loop van het schooljaar. De Startpopulatie wordt dus ook maandelijks opnieuw bepaald, twaalf maanden achter elkaar.
+
 
 ##### A05
 
@@ -195,6 +211,7 @@ A05_dpo_15dec <- A05_totaal %>%
   mutate(RapportageMaand = "15-December")
 ```
 
+
 ##### Aantal ingelezen regels per A05 bestand
 
 De onderstaande tabel laat een overzicht zien van de ingelezen A05-bestanden en het aantal regels per bestand:
@@ -215,6 +232,7 @@ maak_gestylede_datatable(data = A05_tabel_sorted,
 #### 1b. NRSP-bestanden - Startpopulatie
 
 De rapportage Startpopulatie (NRSP) toont de gegevens van leerlingen die aan het begin van het rapportagejaar staan ingeschreven in het Register Onderwijsdeelnemers (ROD) én die bij uitval voldoen aan de definitie van voortijdig schoolverlater. Het rapportagejaar start op 1 oktober van het huidige schooljaar en loopt tot 30 september van het volgende schooljaar. In februari/maart verschijnt de rapportage met voorlopige cijfers. In oktober/november plaatsen we de rapportage met definitieve cijfers.
+
 
 ##### NRSP
 
@@ -270,6 +288,7 @@ NRSP_totaal <- fs::fs_path(bestanden[grep("NRSP", bestanden)]) %>%
   suppressMessages()
 ```
 
+
 ##### Aantal ingelezen regels per NRSP bestand
 
 De onderstaande tabel laat een overzicht zien van de ingelezen NRSP-bestanden en het aantal regels per bestand:
@@ -306,6 +325,7 @@ We laden hier de data in om te bepalen wie van de Startpopulatie dataset een mog
 #### 2a. A04- en A14-bestanden (mogelijke) VSV-ers
 
 De A-rapportages zijn tussenrapportages. De A04 en de A14 bestanden bevatten alle jongeren uit de startpopulatie die in de rapportagemaand geen relevante inschrijving meer hebben en mogelijk een VSV-er zouden kunnen zijn. De A04 wordt aangemaakt over de maanden oktober t/m september in het rapportagejaar. De A14 wordt aangemaakt over de maanden oktober t/m december na het rapportagejaar en bevat de mutaties die nog betrekking hebben op dit voorgaande rapportagejaar.
+
 
 ##### A04
 
@@ -354,6 +374,7 @@ A04_totaal <- fs::fs_path(bestanden[grep("A04", bestanden)]) %>%
   ) |>
   suppressMessages()
 ```
+
 
 ##### Aantal ingelezen regels per A04 bestand
 
@@ -412,6 +433,7 @@ A14_totaal <- fs::fs_path(bestanden[grep("A14", bestanden)]) %>%
 
 ```
 
+
 ##### Aantal ingelezen regels per A14 bestand
 
 De onderstaande tabel laat een overzicht zien van de ingelezen A14-bestanden en het aantal regels per bestand:
@@ -433,6 +455,7 @@ maak_gestylede_datatable(data = A14_tabel_sorted,
 #### 2b. NenR-bestanden VSV-ers
 
 Met de rapportage Namen en rugnummers (NenR) kan gecontroleerd worden wie voortijdig schoolverlaters zijn de instelling. In februari/maart verschijnt de rapportage op basis van de voorlopige cijfers. In oktober/november plaatsen we de rapportage op basis van de definitieve cijfers.
+
 
 ##### NenR
 
@@ -466,6 +489,7 @@ NenR_totaal <-fs::fs_path(bestanden[grep("NenR", bestanden)]) %>%
   )  |>
   suppressMessages()
 ```
+
 
 ##### Aantal ingelezen regels per NenR bestand
 
