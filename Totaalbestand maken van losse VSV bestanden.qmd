@@ -86,7 +86,7 @@ Kies onderstaand of je gebruik wilt maken van de syntehtische data of instelling
 -   een **\#** voor de regel **weg** te halen om te **activeren**.
 
 ```{r}
-# Sys.setenv(R_CONFIG_ACTIVE = "default")
+ Sys.setenv(R_CONFIG_ACTIVE = "default")
 # Sys.setenv(R_CONFIG_ACTIVE = "...")
 ```
 
