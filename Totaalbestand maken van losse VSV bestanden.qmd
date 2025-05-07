@@ -87,7 +87,7 @@ Kies onderstaand of je gebruik wilt maken van de syntehtische data of instelling
 
 ```{r}
 # Sys.setenv(R_CONFIG_ACTIVE = "default")
- Sys.setenv(R_CONFIG_ACTIVE = "graafschap")
+# Sys.setenv(R_CONFIG_ACTIVE = "...")
 ```
 
 
