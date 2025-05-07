@@ -19,6 +19,8 @@ if (platform == "macOS") {
 
 source("utils/manage_packages.R")
 
+source("utils/set_rstudio_prefs.R")
+
 clear_script_objects(filepath = "utils/dev_functions.R")
 
 load_all()
