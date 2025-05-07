@@ -9,6 +9,7 @@ format:
   html:
     toc: true
     toc-title: Inhoudsopgave
+    toc-depth: 5
     code-fold: true
     code-summary: "Laat code zien"
 execute:
@@ -32,19 +33,19 @@ source("helpers.R")
 
 ## Vooraf
 
-In dit project worden DUO data m.b.t. voortijdig schoolverlaters (VSV) opgehaald, bewerkt en gekoppeld, zodat er een analysebestand onstaat. Vervolgens wordt een eerste aanzet gedaan om de data te valideren en te visualiseren. Het is mogelijk gebruik te maken van synthetische data (gesimuleerde data) of data van de instelling / school.
+In dit project worden DUO data met betrekking tot voortijdig schoolverlaters (VSV) opgehaald, bewerkt en gekoppeld, zodat er een analysebestand ontstaat. Vervolgens wordt een eerste aanzet gedaan om de data te valideren en te visualiseren. Het is mogelijk gebruik te maken van synthetische data (gesimuleerde data) of data van de instelling of school.
 
 
 
-##### Instellen gebruik syntehtische data of instellings- / schooldata
+### 1. Instellen gebruik synthetische data of instellings- of schooldata
 
-Voor het gebruik van de synthetische data, hoeft niets aangepast te worden in het config.yml betand. Verderop zal nog wel de keuze gemaakt moeten worden of gebruik gemaakt wordt van de instellings- / schooldata.
+Voor het gebruik van de synthetische data, hoeft niets aangepast te worden in het config.yml betand. Verderop zal nog wel de keuze gemaakt moeten worden of gebruik gemaakt wordt van de instellings- of schooldata.
 
-Om de instellings- / schooldata te gebruiken, zal eerst het volgende bestand aangepast moeten worden: config.yml. Hoe dat in zijn werk gaat, staat hieronder beschreven.
+Om de instellings- of schooldata te gebruiken, zal eerst het volgende bestand aangepast moeten worden: config.yml. Hoe dat in zijn werk gaat, staat hieronder beschreven.
 
 
 
-##### Config.yml bestand bekijken
+### 2. Config.yml bestand bekijken
 
 Dit staat nu in de config.yml:
 
@@ -58,13 +59,13 @@ cat(readLines(here::here("config.yml")), sep = "\n")
 #| echo: false
 #| results: asis
 source(here::here("helpers.R"))
-cat("Om het config.yml bestand te openen, voer `open_config()` uit in de Console.")
+# cat("Om het config.yml bestand te openen, voer `open_config()` uit in de Console.")
 ```
 
 
-##### Gebruik data eigen instelling
+### 3. Gebruik data eigen instelling
 
-Volg deze stappen om je eigen instelling / school toe te voegen:
+Volg deze stappen om je eigen instelling of school toe te voegen:
 
 -   <u>Voer `open_config()` uit</u> in de R console
 -   <u>Instellingsnaam</u>: Vervang `...` met je **instellingsnaam**
@@ -78,14 +79,15 @@ Het alternatief is om synthetische data te gebruiken.
 
 
 
-##### Keuze gebruik syntehtische data of instellings- / schooldata
+### 4. Keuze gebruik synthetische data of instellings- of schooldata
 
-Kies onderstaand of je gebruik wilt maken van de syntehtische data of instellings- / schooldata, door:
+Kies onderstaand of je gebruik wilt maken van de synthetische data of instellings- of schooldata, door:
 
--   een **\#** voor de regel te **plaatsten** die je wilt **intactiveren** en
--   een **\#** voor de regel **weg** te halen om te **activeren**.
+-   een **\#** voor de regel te **plaatsen** die je wilt **inactiveren** en
+-   een **\#** voor de regel **weg** te halen om te **activeren**:
 
 ```{r}
+#| code-fold: false
  Sys.setenv(R_CONFIG_ACTIVE = "default")
 # Sys.setenv(R_CONFIG_ACTIVE = "...")
 ```
@@ -103,15 +105,15 @@ Als eerste worden de data ingeladen om een Startpopulatie dataset te maken. De S
 
 #### 1a. Directory bepalen waar de DUO VSV-bestanden opgeslagen zijn
 
-Als alle bovenstaande stappen doorlopgen zijn, is de locatie waar de VSV-bsetanden opgeslagen zijn, vastgelegd in het config.yml bestand. Nu wordt de **data_base_dir** regel uit het config.yml bestand uitgelezen om deze locatie te bepalden:
+Als alle bovenstaande stappen doorlopen zijn, is de locatie waar de VSV-bsetanden opgeslagen zijn, vastgelegd in het config.yml bestand. Nu wordt de **data_base_dir** regel uit het config.yml bestand uitgelezen om deze locatie te bepalen:
 
 ```{r}
 bestanden <- c(list.files(config::get("data_base_dir"), recursive = TRUE, full.names=TRUE))
 ```
 
-#### 1a. A05-bestanden - Startpopulatie
+#### 1b. A05-bestanden - Startpopulatie
 
-De A05 bestanden bevatten alle jongeren die aan het begin van het rapportagejaar (1 oktober) een relevante inschrijving hebben in het Register Onderwijsdeelnemers (ROD) en die bij uitval mogelijk een VSV-er zouden kunnen zijn. De A-rapportages zijn tussenrapportages. In de A-rapportages worden dan ook leerlingen die zich ten opzichte van de startpopulatie uitschrijven en zich (nog) niet opnieuw hebben ingeschreven, gesignaleerd: de workload. Overigens zijn de gegevens uit het Register Onderwijsdeelnemers die de basis zijn voor de startpopulatie van de A-rapportages niet direct definitief: dat gebeurt pas in de loop van het schooljaar. De Startpopulatie wordt dus ook maandelijks opnieuw bepaald, twaalf maanden achter elkaar.
+De A05 bestanden bevatten alle jongeren die aan het begin van het rapportagejaar (1 oktober) een relevante inschrijving hebben in het Register Onderwijsdeelnemers (ROD) en die bij uitval mogelijk een VSV-er zouden kunnen zijn. De A-rapportages zijn tussenrapportages. In de A-rapportages worden dan ook leerlingen die zich ten opzichte van de startpopulatie uitschrijven en zich (nog) niet opnieuw hebben ingeschreven, gesignaleerd: de workload. Overigens zijn de gegevens uit het Register Onderwijsdeelnemers (ROD) die de basis zijn voor de startpopulatie van de A-rapportages niet direct definitief: dat gebeurt pas in de loop van het schooljaar. De Startpopulatie wordt dus ook maandelijks opnieuw bepaald, twaalf maanden achter elkaar.
 
 
 ##### A05
@@ -185,7 +187,7 @@ A05_totaal <- fs::fs_path(bestanden[grep("A05", bestanden)]) %>%
   suppressMessages()
 ```
 
-Omdat de bestanden, die de VSV-ers bevatten vijfien keer aangeleverd worden, dupliceren we het laatste aangeleverde A05 bestand om ook de 13e t/m de 15e maand aan te maken.
+Omdat de bestanden, die de VSV-ers bevatten, vijftien keer aangeleverd worden, dupliceren we het laatste aangeleverde A05 bestand om ook de 13e t/m de 15e maand aan te maken.
 
 RapportageMaand = 9 uit het A05 bestand wordt RapportageMaand 13-oktober:
 
@@ -229,9 +231,9 @@ maak_gestylede_datatable(data = A05_tabel_sorted,
                          caption = "Aantal leerlingen in Startpopulatie per ingelezen A05 bestand")
 ```
 
-#### 1b. NRSP-bestanden - Startpopulatie
+#### 1c. NRSP-bestanden - Startpopulatie
 
-De rapportage Startpopulatie (NRSP) toont de gegevens van leerlingen die aan het begin van het rapportagejaar staan ingeschreven in het Register Onderwijsdeelnemers (ROD) én die bij uitval voldoen aan de definitie van voortijdig schoolverlater. Het rapportagejaar start op 1 oktober van het huidige schooljaar en loopt tot 30 september van het volgende schooljaar. In februari/maart verschijnt de rapportage met voorlopige cijfers. In oktober/november plaatsen we de rapportage met definitieve cijfers.
+De rapportage Startpopulatie (NRSP) toont de gegevens van leerlingen die aan het begin van het rapportagejaar staan ingeschreven in het Register Onderwijsdeelnemers (ROD) én die bij uitval voldoen aan de definitie van voortijdig schoolverlater. Het rapportagejaar start op 1 oktober van het huidige schooljaar en loopt tot 30 september van het volgende schooljaar. In februari/maart verschijnt de rapportage met voorlopige cijfers. In oktober/november plaatst DUO de rapportage met definitieve cijfers.
 
 
 ##### NRSP
@@ -306,7 +308,7 @@ maak_gestylede_datatable(data = NRSP_tabel_sorted,
                          caption = "Aantal leerlingen in NRSP bestand per ingelezen bestand")
 ```
 
-#### 1c. Totaal bestand Starpopulatie maken
+#### 1d. Totaal bestand Startpopulatie maken
 
 Hier worden de A05 datasets en de NRSP dataset aan elkaar gekoppeld:
 
@@ -318,7 +320,7 @@ A05_dpo_totaal <- bind_rows(A05_totaal,
                             NRSP_totaal)
 ```
 
-### 2. Data (moglijke) VSV-ers inladen
+### 2. Data (mogelijke) VSV-ers inladen
 
 We laden hier de data in om te bepalen wie van de Startpopulatie dataset een mogelijke VSV-er is en wie uiteindelijk een VSV-er is geworden. Deze dataset wordt opgebouwd uit meerdere bestanden, namelijk de A04 bestanden (12x), A14 (3x) en de NenR data (1x voorlopige dataset en 1x definitieve dataset).
 
@@ -454,7 +456,7 @@ maak_gestylede_datatable(data = A14_tabel_sorted,
 
 #### 2b. NenR-bestanden VSV-ers
 
-Met de rapportage Namen en rugnummers (NenR) kan gecontroleerd worden wie voortijdig schoolverlaters zijn de instelling. In februari/maart verschijnt de rapportage op basis van de voorlopige cijfers. In oktober/november plaatsen we de rapportage op basis van de definitieve cijfers.
+Met de rapportage Namen en rugnummers (NenR) kan gecontroleerd worden wie voortijdig schoolverlaters zijn de instelling. In februari/maart verschijnt de rapportage op basis van de voorlopige cijfers. In oktober/november plaatst DUO de rapportage op basis van de definitieve cijfers.
 
 
 ##### NenR
@@ -523,7 +525,7 @@ VSV <- bind_rows(A04_totaal,
 
 ### 3. Data VSV streefwaarden (normen) inladen
 
-De streefpercentages zijn berekend door DUO en OCW op landelijk niveau met als doelstelling max. 20.000 nieuwe vsv'ers in 2024.
+De streefpercentages zijn berekend door DUO en OCW op landelijk niveau met als doelstelling maximaal 20.000 nieuwe vsv'ers in 2024.
 
 Hier worden de VSV streefwaarden ingeladen:
 
@@ -639,6 +641,8 @@ mijn_titel <- paste("Aantal VSV-ers", Keuzejaar, "in rapportagemaand", Keuzemaan
 ```
 
 ```{r KPIs}
+#| fig-width: 12
+#| fig-height: 2
 Plot_waarde <- function(Keuze_variabele, Keuze_tekst){
   ggplot() +
   annotate("text", label = Keuze_variabele, x = 0, y = 0.1, size = 15) +
@@ -656,7 +660,7 @@ Plot_aantal_VSV <- Plot_waarde(`Aantal VSV`, "Aantal VSV")
 Plot_percentage_VSV <- Plot_waarde(`Percentage VSV`, "Percentage VSV") 
 
 # Combineer plots naast elkaar
-#Plot_aantal_starterset + plot_spacer() + Plot_aantal_VSV + plot_spacer() + Plot_percentage_VSV
+# Plot_aantal_starterset + plot_spacer() + Plot_aantal_VSV + plot_spacer() + Plot_percentage_VSV
 
 # Combineer plots naast elkaar met witruimte ertussen
 combined_plot <- Plot_aantal_starterset + plot_spacer() + Plot_aantal_VSV + plot_spacer() + Plot_percentage_VSV +
@@ -733,7 +737,7 @@ Plot_leerweg_percentageVSV <- plot_titel_percentageVSV(data = VSVperc_per_Teljaa
 Plot_leerweg_percentageVSV
 ```
 
-## 5. Dashboard
+### 5. Dashboard
 
 <h1 style="color: #8B4500; font-family: &#39;AvantGarde&#39;, sans-serif, monospace;">
 
