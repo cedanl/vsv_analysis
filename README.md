@@ -50,7 +50,7 @@ Druk hiervoor op het icoontje rechtsboven: <img src="Pictures/Download.png" alt=
 Setup script detected. Run 00_setup.R? (press ENTER to run, ESC to skip): 
 ```
 5. Afhankelijk van de geïnstalleerde R-pakketten op je systeem kan dit enkele minuten duren.
-6. Voer de verkennende analyse uit door instroomprognose_prototype.qmd te openen en op Render te klikken.
+6. Voer de verkennende analyse uit door **"Totaalbestand maken van losse VSV bestanden.qmd"** te openen en op Render te klikken.
 7. Bekijk het rapport in HTML- of PDF-formaat.
 
 
