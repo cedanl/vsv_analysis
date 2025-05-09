@@ -21,13 +21,14 @@ source("utils/manage_packages.R")
 
 source("utils/set_rstudio_prefs.R")
 
-clear_script_objects(filepath = "utils/dev_functions.R")
-
 load_all()
 
 message("Render voor analyse: Totaalbestand maken van losse VSV bestanden.qmd")
 # TODO Starting in R Studio works, interactive is more general, later on might need
 # to verify if this works in VS Code / Positron etc
-if (interactive()) { # if (rstudioapi::isAvailable()) {
+if (interactive() && rstudioapi::isAvailable()) {
+    rstudioapi::navigateToFile("config.yml")
     rstudioapi::navigateToFile("Totaalbestand maken van losse VSV bestanden.qmd")
 }
+
+rm(list = ls())
