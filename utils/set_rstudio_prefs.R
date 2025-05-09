@@ -1,6 +1,6 @@
 system_username <- tolower(Sys.getenv("USERNAME"))
-
 rstudio_prefs_path <- NULL
+prefs_changed <- FALSE
 
 if (platform == "windows") {
     if (dir.exists("C:/Users/")) {
@@ -23,7 +23,6 @@ if (platform == "windows") {
 }
 
 if (!is.null(rstudio_prefs_path)) {
-    prefs_changed <- FALSE
 
     prefs_content <- jsonlite::read_json(rstudio_prefs_path)
 
