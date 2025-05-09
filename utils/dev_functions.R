@@ -40,6 +40,7 @@ clear_script_objects <- function(..., filepath = NULL, list = character(), pos =
         filepath <- this.path::sys.path()
     }
 
+    # Get added objects and put them in list
     dots <- match.call(expand.dots = FALSE)$...
     if (length(dots) &&
         !all(vapply(dots, function(x) is.symbol(x) || is.character(x), NA, USE.NAMES = FALSE))) {
@@ -47,24 +48,35 @@ clear_script_objects <- function(..., filepath = NULL, list = character(), pos =
     }
     names <- vapply(dots, as.character, "")
     if (length(names) == 0L) names <- character()
-    list <- .Primitive("c")(list, names)
+    objects_not_remove_list <- .Primitive("c")(list, names)
 
-    Teststring_assignment <- "^[a-zA-Z_0-9]*(?=(\\s<-))"
-    Regels <-
-        stringr::str_extract(
-            readr::read_lines(filepath, skip = line_start, n_max = line_end),
-            Teststring_assignment
-        )
-    Regels <- base::unique(Regels[!base::is.na(Regels)])
+    # Find objects - using a pattern that will reliably find variable assignments
+    lines <- readr::read_lines(filepath, skip = line_start, n_max = line_end)
 
-    Regels2 <- setdiff(Regels, list)
-    rm(list = Regels2, pos = ".GlobalEnv")
-    if (!silent) {
-        base::cat(cli::style_bold(cli::col_red("De volgende variabelen worden verwijderd: \n")))
-        base::cat(cli::style_bold(cli::col_red(paste(Regels2,
-                                                     collapse = ", \n"
-        ))))
-        base::cat(paste("\n"))
+    # Look for variable names followed by <- assignment
+    pattern <- "^\\s*([a-zA-Z][a-zA-Z0-9_]*)\\s*<-"
+    matches <- stringr::str_match(lines, pattern)
+
+    # Extract just the variable names (in the second column of the match matrix)
+    objects_found <- matches[, 2]
+    objects_found_unique <- base::unique(objects_found[!base::is.na(objects_found)])
+
+    objects_found_to_remove <- setdiff(objects_found_unique, objects_not_remove_list)
+
+    objects_exist_and_remove <- objects_found_to_remove[vapply(objects_found_to_remove, exists, logical(1), envir = .GlobalEnv)]
+
+    # Remove only existing variables
+    if (length(objects_exist_and_remove) > 0) {
+        rm(list = objects_exist_and_remove, pos = ".GlobalEnv")
+        if (!silent) {
+            base::cat(cli::style_bold(
+                cli::col_red("De volgende variabelen worden verwijderd: \n")
+            ))
+            base::cat(cli::style_bold(cli::col_red(
+                paste(objects_exist_and_remove, collapse =     ", \n")
+            )))
+            base::cat(paste("\n"))
+        }
     }
 }
 
