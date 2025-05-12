@@ -1,10 +1,9 @@
 ---
 title: "Voortijdig schoolverlater (VSV) totaal bestand maken"
-
 subtitle: "Eerste inzichten in DUO VSV data"
 affiliation: "CEDA - Npuls"
 date: "`r format(Sys.time(), '%d %B %Y')`"
-editor: visual
+editor: source
 format: 
   html:
     toc: true
