@@ -26,16 +26,16 @@ options(renv.config.install.binary = TRUE)
 
 source("utils/renv/activate.R")
 
-# Trigger load
 if (interactive() && file.exists("utils/00_setup.R")) {
-    message("Setup script detected. Run 00_setup.R? (press ENTER or 'y' to run, any other key to skip):")
-    response <- tryCatch({
-        user_input <- readline()
-        if (length(user_input) == 0 || user_input == "") "" else user_input
-    }, error = function(e) {
-        message("Error reading input, defaulting to not run setup.\n Run `source('utils/00_setup.R')` manually if needed.")
-        "n"
-    })
+
+    is_powershell <- Sys.getenv("RSTUDIO_POWERSHELL_LAUNCH") == "TRUE"
+    if (is_powershell) {
+        message("⚠️ Geen gebruikersinvoer mogelijk in deze sessie. Setup runt automatisch.")
+        response <- "y"
+    } else {
+        message("Setup script detected. Run 00_setup.R? (press ENTER or 'y' to run, any other key to skip):")
+        response <- readline()
+    }
 
     if (response == "" || tolower(substr(response, 1, 1)) == "y") {
         source("utils/00_setup.R")

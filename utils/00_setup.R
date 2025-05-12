@@ -23,10 +23,11 @@ source("utils/set_rstudio_prefs.R")
 
 load_all()
 
-message("Render voor analyse: Totaalbestand maken van losse VSV bestanden.qmd")
-# TODO Starting in R Studio works, interactive is more general, later on might need
-# to verify if this works in VS Code / Positron etc
-if (interactive() && rstudioapi::isAvailable()) {
+message("🔧 Pas aan voor data van je eigen instelling: config.yml")
+message("🔍 Render voor analyse: Totaalbestand maken van losse VSV bestanden.qmd")
+#TODO Starting in R Studio works, interactive is more general, later on might need
+#to verify if this works in VS Code / Positron etc
+if (rstudioapi::isAvailable()) {
     rstudioapi::navigateToFile("config.yml")
     rstudioapi::navigateToFile("Totaalbestand maken van losse VSV bestanden.qmd")
 }
