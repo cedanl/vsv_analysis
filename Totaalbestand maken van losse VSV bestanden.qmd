@@ -58,14 +58,15 @@ source(here::here("helpers.R"))
 
 Volg deze stappen om je eigen instelling of school toe te voegen:
 
--   Voer **`open_config()`** uit in de <u>R console</u>. De config.yml wordt geopend.
+-   Zorg ervoor dat je **toegang** hebt tot de map waarin de VSV-data staan óf zet de volgende VSV-bestanden in een map op je computer: **A04**, **A14**, **A05**, **NRSP** en **NenR**.
+- Voer **`open_config()`** uit in de <u>R console</u>. De config.yml wordt geopend.
 
 Pas het volgende aan in de config.yml:
 
 -   <u>Instellingsnaam</u>: Vervang de drie puntjes in de regel `...:` met je **Instellingsnaam**
 -   <u>Naam in configuratie</u>: Vervang de drie puntjes in de regel `name: "..."` met je **Instellingsnaam**
--   <u>Bronmap</u>: Vervang de drie puntjes in de regel `data_base_dir: "..."` met de **link naar de map** waarin de VSV-bestanden staan
--   <u>Doelmap</u>: Vervang de drie puntjes in de regel `data_results_dir: "..."` met de **link naar de map** waarin de resultaten naar toe gestuurd moeten worden
+-   <u>Bronmap</u>: Vervang de drie puntjes in de regel `data_base_dir: "..."` met de **link naar de map** waarin de VSV-bestanden staan (<i>LET OP! Zorg dat de \ omgezet wordt in een /</i>)
+-   <u>Doelmap</u>: Vervang de drie puntjes in de regel `data_results_dir: "..."` met de **link naar de map** waarin de resultaten naar toe gestuurd moeten worden (<i>LET OP! Zorg dat de \ omgezet wordt in een /</i>)
 
 <u>
 
@@ -83,7 +84,7 @@ Kies onderstaand of je gebruik wilt maken van de synthetische data of instelling
 ```{r}
 #| code-fold: false
  Sys.setenv(R_CONFIG_ACTIVE = "default")
-# Sys.setenv(R_CONFIG_ACTIVE = "graafschap")
+# Sys.setenv(R_CONFIG_ACTIVE = "...")
 ```
 
 <u>
