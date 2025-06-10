@@ -34,7 +34,7 @@ packages_cran <- c(
     #"devtools",
     #"usethis",
     #"roxygen2",
-    "pak",          # Install R packages fast
+    #"pak",          # Install R packages fast
     "pkgload",      # Load and test packages
     "here",           # Set up file paths, is this necessary with this.path
     "this.path",
@@ -120,22 +120,14 @@ options(renv.snapshot.filter = function(project) {
 # TODO Un-edit when adding packages above to include them in snapshot
 # renv::snapshot(type = "custom")
 
-
-# Probeer met pak, fallback naar standaard renv restore
-tryCatch({
-    # TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
-    if (are_packages_up_to_date(packages_renv) == TRUE) {
-        message("✅ All packages already at correct versions. No need to restore.")
-    } else {
-        # Only run restore if needed
-        renv::restore(confirm = FALSE)
-    }
-}, error = function(e) {
-    message("Installation error, fallback to more simple installation.")
-    renv::clean()
-    options(renv.config.pak.enabled = FALSE)
+# TODO Run with clean = TRUE to remove all packages that are added but not in snapshot
+if (are_packages_up_to_date(packages_renv) == TRUE) {
+    message("✅ All packages already at correct versions. No need to restore.")
+} else {
+    # Only run restore if needed
     renv::restore(confirm = FALSE)
-})
+}
+
 
 # TODO Set to TRUE when adding packages to check if there are problematic conflicts
 suppressMessages(purrr::walk(packages, ~library(.x,

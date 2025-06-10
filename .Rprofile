@@ -9,7 +9,7 @@ Sys.setenv(
     RENV_INSTALL_STAGED = "FALSE",
 
     # Performance
-    RENV_CONFIG_PAK_ENABLED = TRUE, # Pak gives error with solving dependencies, so disabled
+    RENV_CONFIG_PAK_ENABLED = FALSE, # Pak gives error with solving dependencies, so disabled
     RENV_CONFIG_INSTALL_JOBS = 4, # Pak does parallelization by default, so not needed
 
     # Specfic settings, renv is within setup scripts checked and synchronized if needed
