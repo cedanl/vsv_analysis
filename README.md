@@ -33,13 +33,13 @@ ingelezen en samengevoegd tot één databestand waarop visulatiestaties gemaakt 
 
 
 ## 🚀🚀 Quick Quick Start
- ⚠️ <i>Voor het kunnen draaien van de analyse, moeten bestanden gedownload en geinstalleerd worden.Volg hiervoor onderstaande stappen óf ga naar [Quick Start](#-quick-start)</i>
+ ⚠️ <i>Voor het kunnen draaien van de analyse, moeten bestanden gedownload en geinstalleerd worden. Volg hiervoor onderstaande stappen óf ga naar [Quick Start](#-quick-start)</i>
 
 
-1. Download het volgende .bat bestand: https://github.com/cedanl/vsv_analysis/blob/main/install_r_windows_0.1.bat. 
+1. Download het volgende .bat bestand: https://github.com/cedanl/vsv_analysis/blob/main/install_r_windows.bat. 
 Druk hiervoor op het icoontje rechtsboven: <img src="Pictures/Download.png" alt="Download" style="display:inline; width:90px; height:20px;"/> 
 2. Plaats het .bat bestand in een map, waar OneDrive niet geactiveerd is.
-3. Voer het .bat bestand uit met een dubbelklik op het bestand. Afhankelijk van de geïnstalleerde R-pakketten op je systeem kan dit enkele minuten duren.
+3. Voer het .bat bestand uit met een dubbelklik op het bestand (Ter info: het .bat bestand zorgt ervoor dat R, Rstudio, Rtools en benodigde R-pakketten worden geïnstalleerd die benodigd zijn om het R-project te kunnen draaien). Afhankelijk van of er al R-software en/of R-pakketten geïstalleerd zijn op je systeem, kan dit enkele minuten duren.
 4. Als de installatie goed is gegaan, opent R-Studio. Volg vervolgens de instructies in de Console op:
 ```
 Setup script detected. Run 00_setup.R? (press ENTER to run, ESC to skip): 
@@ -47,7 +47,7 @@ Setup script detected. Run 00_setup.R? (press ENTER to run, ESC to skip):
 
 ## 🚀 Quick Start
 
-1. Zorg ervoor dat je R (versie 4.0.0 of hoger) en RStudio hebt geïnstalleerd.
+1. Zorg ervoor dat je R (versie 4.0.0 of hoger), RStudio én Rtools hebt geïnstalleerd.
 2. Klik rechtsboven op "Code" (<img src="Pictures/Code.png" alt="Code" style="display:inline; width:70px; height:20px;"/>).
 3. Clone deze repository met Git of een Git-client zoals GitHub Desktop of SmartGit, of download het als zip-bestand.
 4. Open het project in RStudio en voer het setup-script uit door op Enter te drukken:
