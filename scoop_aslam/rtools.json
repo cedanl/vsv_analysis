@@ -1,0 +1,16 @@
+{
+    "version": "4.5.0",
+    "description": "GNU build tools for Windows (Rtools)",
+    "homepage": "https://cran.r-project.org/bin/windows/Rtools/",
+    "license": "GPL-2.0-or-later",
+    "url": "https://cran.r-project.org/bin/windows/Rtools/rtools45/files/rtools45-6608-6492.exe",
+    "hash": "5407BCC3406A1D602423B68D5E7B7110A2A5F363627B6159D5E17A3392904D6C",
+    "extract_dir": "rtools45",
+    "env_add_path": [
+        "usr\\bin",
+        "mingw64\\bin"
+    ],
+    "env_set": {
+        "RTOOLS40_HOME": "$dir"
+    }
+}
